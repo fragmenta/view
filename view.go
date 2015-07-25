@@ -35,11 +35,6 @@ func DefaultHelpers() parser.FuncMap {
 	funcs["strip"] = helpers.Strip
 	funcs["truncate"] = helpers.Truncate
 
-	// FIXME - this is ugly - I think don't even include these
-	// pointless unless you have reverse routing...
-	funcs["link_to_attr"] = helpers.LinkToAttributes
-	funcs["link_to"] = helpers.LinkTo
-
 	// Form helpers
 	funcs["field"] = helpers.Field
 	funcs["datefield"] = helpers.DateField
@@ -57,13 +52,10 @@ func DefaultHelpers() parser.FuncMap {
 	// CSV helper
 	funcs["csv"] = helpers.CSV
 
-	// INDEX helpers
+	// String helpers
+	funcs["blank"] = helpers.Blank
 
-	// Perhaps do this in a more elegant way with $i,$v := range .units
-	// so counter range .units or similar?
-	funcs["counter"] = helpers.Counter
-	funcs["counter_reset"] = helpers.CounterReset
-
+	// Math helpers
 	funcs["mod"] = helpers.Mod
 	funcs["odd"] = helpers.Odd
 	funcs["add"] = helpers.Add
@@ -73,21 +65,21 @@ func DefaultHelpers() parser.FuncMap {
 	funcs["append"] = helpers.Append
 	funcs["contains"] = helpers.Contains
 
-	// FIXME - rename this to empty
-	funcs["aempty"] = helpers.Empty
-	funcs["notempty"] = helpers.NotEmpty
-
 	// Map functions
 	funcs["map"] = helpers.Map
 	funcs["set"] = helpers.Set
 	funcs["setif"] = helpers.SetIf
-
-	// FIXME rename this to emptymap
-	funcs["empty"] = helpers.EmptyMap
+	funcs["empty"] = helpers.Empty
 
 	// Numeric helpers
 	funcs["centstoprice"] = helpers.CentsToPrice
 	funcs["pricetocents"] = helpers.PriceToCents
+
+	// FIXME - deprecated, remove these
+	funcs["counter"] = helpers.Counter
+	funcs["counter_reset"] = helpers.CounterReset
+	funcs["link_to_attr"] = helpers.LinkToAttributes
+	funcs["link_to"] = helpers.LinkTo
 
 	return funcs
 }
