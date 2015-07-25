@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 
 	"github.com/fragmenta/view/helpers"
 	"github.com/fragmenta/view/parser"
@@ -13,11 +14,16 @@ import (
 // The template sets, loaded on startup for production and on every request for development
 var Templates map[string]parser.Template
 
+// This mutex guards the above Templates variable during reload
+var mu sync.Mutex
+
 // Helper functions available in templates
 var Helpers map[string]interface{}
 
+// Production is true if this server is running in production mode
 var Production bool
 
+// DefaultHelpers returns a default set of helpers for the app, which can then be extended/replaced
 func DefaultHelpers() parser.FuncMap {
 	funcs := make(parser.FuncMap)
 
@@ -84,6 +90,7 @@ func DefaultHelpers() parser.FuncMap {
 	return funcs
 }
 
+// LoadTemplates loads our templates, and assigns them to the package variable Templates
 func LoadTemplates() error {
 
 	// Set up our helper functions if necessary
@@ -101,21 +108,22 @@ func LoadTemplates() error {
 	if err != nil {
 		return err
 	}
-
+	mu.Lock()
+	defer mu.Unlock()
 	Templates = scanner.Templates
 
 	return nil
 }
 
-// Print out our list of templates for debug
+// PrintTemplates prints out our list of templates for debug
 func PrintTemplates() {
-	for k, _ := range Templates {
+	for k := range Templates {
 		fmt.Printf("Template %s", k)
 	}
 	fmt.Printf("Finished scan of templates")
 }
 
-// Render a status code for the user, using a default template (if available)
+// RenderStatus renders a status code for the user, using a default template (if available)
 func RenderStatus(writer http.ResponseWriter, status int) {
 	writer.Header().Set("Content-Type", "text/html; charset=utf-8")
 	writer.WriteHeader(status)
