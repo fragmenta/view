@@ -80,6 +80,7 @@ func DefaultHelpers() parser.FuncMap {
 	// Numeric helpers
 	funcs["centstoprice"] = helpers.CentsToPrice
 	funcs["pricetocents"] = helpers.PriceToCents
+	funcs["centstobase"] = helpers.CentsToBase
 
 	// FIXME - deprecated, remove these
 	funcs["counter"] = helpers.Counter

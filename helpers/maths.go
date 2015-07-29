@@ -2,75 +2,79 @@ package helpers
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
-    "strconv"
 )
-
-
-
 
 // PRICES
 
-// Convenience function returning price in pence as string for use in params
+// PriceToCentsString returns a price in cents as astring for use in params
 func PriceToCentsString(p string) string {
-    if p == "" {
-        return "0"// Return 0 for blank price
-    } else {
-        return fmt.Sprintf("%d",PriceToCents(p))
-    }
+	if p == "" {
+		return "0" // Return 0 for blank price
+	}
+
+	return fmt.Sprintf("%d", PriceToCents(p))
 }
 
-// Convert a price in human friendly notation (£45 or £34.40) to a price in pence as an int64
+// PriceToCents converts a price string in human friendly notation (£45 or £34.40) to a price in pence as an int64
 func PriceToCents(p string) int {
-    price := strings.Replace(p,"£","",-1)
-    price = strings.Replace(price,",","",-1)// assumed to be in thousands
-    price = strings.Replace(price," ","",-1)
-        
-    var pennies int
-    var err error
-    if strings.Contains(price,".") {
-       // Split the string on . and rejoin with padded pennies
-       parts := strings.Split(price,".")
-       
-       if len(parts[1]) == 0 {
-           parts[1] = "00"
-        }else if len(parts[1]) == 1 {
-           parts[1] = parts[1] + "0"
-       }  
-       
-       price = parts[0] + parts[1]
-       
-       pennies,err = strconv.Atoi(price)
-    } else {
-       pennies,err = strconv.Atoi(price)
-       pennies = pennies * 100  
-    }
-    if err != nil {
-        fmt.Printf("Error converting price %s",price)
-        pennies = 0;
-    }
+	price := strings.Replace(p, "£", "", -1)
+	price = strings.Replace(price, ",", "", -1) // assumed to be in thousands
+	price = strings.Replace(price, " ", "", -1)
 
-    return pennies
+	var pennies int
+	var err error
+	if strings.Contains(price, ".") {
+		// Split the string on . and rejoin with padded pennies
+		parts := strings.Split(price, ".")
+
+		if len(parts[1]) == 0 {
+			parts[1] = "00"
+		} else if len(parts[1]) == 1 {
+			parts[1] = parts[1] + "0"
+		}
+
+		price = parts[0] + parts[1]
+
+		pennies, err = strconv.Atoi(price)
+	} else {
+		pennies, err = strconv.Atoi(price)
+		pennies = pennies * 100
+	}
+	if err != nil {
+		fmt.Printf("Error converting price %s", price)
+		pennies = 0
+	}
+
+	return pennies
 }
 
-
-// Convert a price in pence to a human friendly price - NB We DO include currency in £
-// we'll need to adjust this to take a currency setting later
+// CentsToPrice converts a price in pence to a human friendly price including currency unit
+// At present it assumes the currency is pounds, it should instead take an optional param for currency
+// or not include it at all
 func CentsToPrice(p int64) string {
-    price := fmt.Sprintf("£%.2f",float64(p)/100.0)
-    return strings.TrimSuffix(price,".00")// remove zero pence at end if we have it
+	// FIXME - remove currency unit or supply as param, use CentsToBase?
+	price := fmt.Sprintf("£%.2f", float64(p)/100.0)
+	return strings.TrimSuffix(price, ".00") // remove zero pence at end if we have it
 }
 
-
-
-func Mod(a int,b int) int {
-    return a % b
+// CentsToBase converts cents to the base currency unit, preserving cent display, with no currency
+func CentsToBase(p int64) string {
+	return fmt.Sprintf("%.2f", float64(p)/100.0)
 }
 
-func Add(a int,b int) int {
-    return a + b
+// Mod returns a modulo b
+func Mod(a int, b int) int {
+	return a % b
 }
 
+// Add returns a + b
+func Add(a int, b int) int {
+	return a + b
+}
+
+// Odd returns true if a is odd
 func Odd(a int) bool {
-    return a % 2 == 0
+	return a%2 == 0
 }

@@ -50,7 +50,7 @@ func LinkToAttributes(t string, url string, args ...string) got.HTML {
 	return got.HTML(fmt.Sprintf("<a href=\"%s\" %s>%s</a>", url, attributes, text))
 }
 
-// Html
+// Html returns s as a go template URL
 func Html(s string) got.HTML {
 	return got.HTML(s)
 }
@@ -60,7 +60,7 @@ func HtmlAttribute(s string) got.HTMLAttr {
 	return got.HTMLAttr(s)
 }
 
-// Url
+// Url returns s as a go template URL
 func Url(s string) got.URL {
 	return got.URL(s)
 }
