@@ -130,7 +130,7 @@ func (r *Renderer) Context(c map[string]interface{}) *Renderer {
 	return r
 }
 
-// RenderString renders our template into layout using our context and return a string
+// RenderString renders our template into layout using our context and return a string - FIXME - rename to RenderToString
 func (r *Renderer) RenderString() (string, error) {
 
 	content := ""

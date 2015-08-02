@@ -139,7 +139,12 @@ func Date(t time.Time, formats ...string) got.HTML {
 
 // UTCDate returns a formatted date string in 2006-01-02
 func UTCDate(t time.Time) got.HTML {
-	return Date(t, "2006-01-02")
+	return Date(t.UTC(), "2006-01-02")
+}
+
+// UTCTime returns a formatted date string in 2006-01-02
+func UTCTime(t time.Time) got.HTML {
+	return Time(t.UTC(), "2006-01-02T15:04:00:00.000Z")
 }
 
 // UTCNow returns a formatted date string in 2006-01-02

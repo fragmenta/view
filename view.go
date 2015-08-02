@@ -50,6 +50,7 @@ func DefaultHelpers() parser.FuncMap {
 	funcs["optionsforselect"] = helpers.OptionsForSelect
 
 	funcs["utcdate"] = helpers.UTCDate
+	funcs["utctime"] = helpers.UTCTime
 	funcs["utcnow"] = helpers.UTCNow
 	funcs["date"] = helpers.Date
 	funcs["time"] = helpers.Time
@@ -78,9 +79,9 @@ func DefaultHelpers() parser.FuncMap {
 	funcs["empty"] = helpers.Empty
 
 	// Numeric helpers
+	funcs["centstobase"] = helpers.CentsToBase
 	funcs["centstoprice"] = helpers.CentsToPrice
 	funcs["pricetocents"] = helpers.PriceToCents
-	funcs["centstobase"] = helpers.CentsToBase
 
 	// FIXME - deprecated, remove these
 	funcs["counter"] = helpers.Counter
