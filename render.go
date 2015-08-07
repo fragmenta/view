@@ -37,24 +37,10 @@ type Renderer struct {
 	path string
 }
 
-// SetupContext is the required context interface for setting up a view
-type SetupContext interface {
-	CurrentPath() string
-}
-
-// Empty is a dummy context which supplies no info
-type Empty struct {
-}
-
-// CurrentPath on empty is ""
-func (m *Empty) CurrentPath() string {
-	return ""
-}
-
 // New creates a new Renderer
-func New(c SetupContext) *Renderer {
+func New(path string) *Renderer {
 	r := &Renderer{
-		path:     c.CurrentPath(),
+		path:     path,
 		layout:   "app/views/layout.html.got",
 		template: "",
 		format:   "text/html",
