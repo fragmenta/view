@@ -40,7 +40,6 @@ type Renderer struct {
 // SetupContext is the required context interface for setting up a view
 type SetupContext interface {
 	CurrentPath() string
-	CurrentUser() interface{}
 }
 
 // Empty is a dummy context which supplies no info
@@ -50,11 +49,6 @@ type Empty struct {
 // CurrentPath on empty is ""
 func (m *Empty) CurrentPath() string {
 	return ""
-}
-
-// CurrentUser on empty is nil
-func (m *Empty) CurrentUser() interface{} {
-	return nil
 }
 
 // New creates a new Renderer
@@ -67,8 +61,6 @@ func New(c SetupContext) *Renderer {
 		status:   http.StatusOK,
 		context:  make(map[string]interface{}),
 	}
-
-	r.context["current_user"] = c.CurrentUser()
 
 	// This sets layout and template based on the view.path
 	r.setDefaultTemplates()
