@@ -39,9 +39,9 @@ func DefaultHelpers() parser.FuncMap {
 	funcs["dev"] = func() bool { return !Production }
 
 	// HTML helpers
-	funcs["html"] = helpers.Html
-	funcs["htmlattr"] = helpers.HtmlAttribute
-	funcs["url"] = helpers.Url
+	funcs["html"] = helpers.HTML
+	funcs["htmlattr"] = helpers.HTMLAttribute
+	funcs["url"] = helpers.URL
 
 	funcs["sanitize"] = helpers.Sanitize
 	funcs["strip"] = helpers.Strip
@@ -84,16 +84,10 @@ func DefaultHelpers() parser.FuncMap {
 	funcs["setif"] = helpers.SetIf
 	funcs["empty"] = helpers.Empty
 
-	// Numeric helpers
+	// Numeric helpers - clean up and accept currency and other options in centstoprice
 	funcs["centstobase"] = helpers.CentsToBase
 	funcs["centstoprice"] = helpers.CentsToPrice
 	funcs["pricetocents"] = helpers.PriceToCents
-
-	// FIXME - deprecated, remove these
-	funcs["counter"] = helpers.Counter
-	funcs["counter_reset"] = helpers.CounterReset
-	funcs["link_to_attr"] = helpers.LinkToAttributes
-	funcs["link_to"] = helpers.LinkTo
 
 	return funcs
 }

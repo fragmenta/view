@@ -161,15 +161,3 @@ func Truncate(s string, l int64) string {
 func CSV(s got.HTML) string {
 	return strings.Replace(string(s), ",", ",,", -1)
 }
-
-// ESCAPING
-
-// Escape escapes HTML using HTMLEscapeString
-func Escape(s string) string {
-	return got.HTMLEscapeString(s)
-}
-
-// EscapeURL escapes URLs using HTMLEscapeString
-func EscapeURL(s string) string {
-	return got.URLQueryEscaper(s)
-}

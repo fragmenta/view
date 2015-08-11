@@ -10,9 +10,9 @@ import (
 	parser "github.com/fragmenta/view/internal/html"
 )
 
-// HEAD
+// NB all HTML with user input must be escaped, see https://www.owasp.org/index.php/XSS_Prevention_Cheatsheet
 
-// We should handle a comma separated array of style names, as per rails
+// These two should instead be using assets package?
 
 // Style inserts a css tag
 func Style(name string) got.HTML {
@@ -24,55 +24,46 @@ func Script(name string) got.HTML {
 	return got.HTML(fmt.Sprintf("<script src=\"/assets/scripts/%s.js\" type=\"text/javascript\"></script>", EscapeURL(name)))
 }
 
-// HTML
+// ESCAPING
 
-// FIXME - REMOVE TWO NEXT METHODS - not required and ugly - better to use urls or html directly
-// without reverse routing this is useless, and reverse routing is of dubious utility IMHO
-
-// LinkTo is deprecated
-func LinkTo(t string, f string, args ...interface{}) got.HTML {
-	// We should always escape the args here...
-	text := Escape(t)
-	url := fmt.Sprintf(f, args...)
-	return got.HTML(fmt.Sprintf("<a href=\"%s\">%s</a>", url, text))
+// Escape escapes HTML using HTMLEscapeString
+func Escape(s string) string {
+	return got.HTMLEscapeString(s)
 }
 
-// LinkToAttributes is deprecated
-func LinkToAttributes(t string, url string, args ...string) got.HTML {
-	// FIXME - this is a little messy, think of a better way to do this
-	// we need to retain ability to feed in info to link formats via templates though
-	// e.g. link_to "NAME", "url/%d/xxx", int
-	text := Escape(t)
-	attributes := ""
-	if len(args) > 0 {
-		attributes = strings.Join(args, " ")
-	}
-	return got.HTML(fmt.Sprintf("<a href=\"%s\" %s>%s</a>", url, attributes, text))
+// EscapeURL escapes URLs using HTMLEscapeString
+func EscapeURL(s string) string {
+	return got.URLQueryEscaper(s)
 }
 
-// Html returns s as a go template URL
-func Html(s string) got.HTML {
+// Link returns got.HTML with an anchor link given text and URL required
+// Attributes (if supplied) should not contain user input
+func Link(t string, u string, a ...string) got.HTML {
+	return got.HTML(fmt.Sprintf("<a href=\"%s\" %s>%s</a>", Escape(u), Escape(a[0]), Escape(t)))
+}
+
+// HTML returns a string (which must not contain user input) as go template HTML
+func HTML(s string) got.HTML {
 	return got.HTML(s)
 }
 
-// HtmlAttribute formats a string as an HTMLAttr
-func HtmlAttribute(s string) got.HTMLAttr {
+// HTMLAttribute returns a string (which must not contain user input) as go template HTMLAttr
+func HTMLAttribute(s string) got.HTMLAttr {
 	return got.HTMLAttr(s)
 }
 
-// Url returns s as a go template URL
-func Url(s string) got.URL {
+// URL returns returns a string (which must not contain user input) as go template URL
+func URL(s string) got.URL {
 	return got.URL(s)
 }
 
-// Strip all html tags
+// Strip all html tags and returns as go template HTML
 func Strip(s string) got.HTML {
 	return Sanitize(s, []string{}, []string{})
 }
 
-// Sanitize utf8 html, allowing some tags
+// Sanitize sanitises html, allowing some tags using the html parser from golang.org/x/net/html and returns as go template HTML
 // Usage: sanitize.HTMLAllowing("<b id=id>my html</b>",[]string{"b"},[]string{"id")
-//- this uses the experimental html parser in golang external packages go.net
 func Sanitize(s string, args ...[]string) got.HTML {
 
 	var ignoreTags = []string{"title", "script", "style", "iframe", "frame", "frameset", "noframes", "noembed", "embed", "applet", "object"}
@@ -153,6 +144,7 @@ func Sanitize(s string, args ...[]string) got.HTML {
 
 }
 
+// cleanAttributes removes all attributes except those in the allowed list
 func cleanAttributes(a []parser.Attribute, allowed []string) []parser.Attribute {
 	if len(a) == 0 {
 		return a
@@ -167,6 +159,7 @@ func cleanAttributes(a []parser.Attribute, allowed []string) []parser.Attribute 
 	return cleaned
 }
 
+// includes returns true if this array of strings contains string s
 func includes(a []string, s string) bool {
 	for _, as := range a {
 		if as == s {
