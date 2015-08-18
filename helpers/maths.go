@@ -8,7 +8,7 @@ import (
 
 // PRICES
 
-// PriceToCentsString returns a price in cents as astring for use in params
+// PriceToCentsString returns a price in cents as a string for use in params
 func PriceToCentsString(p string) string {
 	if p == "" {
 		return "0" // Return 0 for blank price

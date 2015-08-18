@@ -24,8 +24,6 @@ func Script(name string) got.HTML {
 	return got.HTML(fmt.Sprintf("<script src=\"/assets/scripts/%s.js\" type=\"text/javascript\"></script>", EscapeURL(name)))
 }
 
-// ESCAPING
-
 // Escape escapes HTML using HTMLEscapeString
 func Escape(s string) string {
 	return got.HTMLEscapeString(s)
@@ -39,7 +37,11 @@ func EscapeURL(s string) string {
 // Link returns got.HTML with an anchor link given text and URL required
 // Attributes (if supplied) should not contain user input
 func Link(t string, u string, a ...string) got.HTML {
-	return got.HTML(fmt.Sprintf("<a href=\"%s\" %s>%s</a>", Escape(u), Escape(a[0]), Escape(t)))
+	attributes := ""
+	if len(a) > 0 {
+		attributes = strings.Join(a, " ")
+	}
+	return got.HTML(fmt.Sprintf("<a href=\"%s\" %s>%s</a>", Escape(u), Escape(attributes), Escape(t)))
 }
 
 // HTML returns a string (which must not contain user input) as go template HTML

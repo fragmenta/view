@@ -9,11 +9,7 @@ import (
 	"path"
 	"regexp"
 	"strings"
-
-	"github.com/fragmenta/view/helpers"
 )
-
-// The renderer should perhaps also have a log reference from router
 
 // Renderer is a view which is set up on each request and renders the response
 type Renderer struct {
@@ -37,16 +33,24 @@ type Renderer struct {
 	path string
 }
 
+// RenderData is the type passed in to New, which helps construct the rendering view
+type RenderData interface {
+	Path() string
+	RenderContext() map[string]interface{}
+}
+
 // New creates a new Renderer
-func New(path string) *Renderer {
+func New(c RenderData) *Renderer {
 	r := &Renderer{
-		path:     path,
+		path:     c.Path(),
 		layout:   "app/views/layout.html.got",
 		template: "",
 		format:   "text/html",
 		status:   http.StatusOK,
-		context:  make(map[string]interface{}),
+		context:  c.RenderContext(),
 	}
+
+	// Append the passed in data
 
 	// This sets layout and template based on the view.path
 	r.setDefaultTemplates()
@@ -199,9 +203,6 @@ func (r *Renderer) Render(writer http.ResponseWriter) error {
 		return err
 	}
 
-	// Reset our helpers on every render
-	helpers.CounterReset()
-
 	return nil
 }
 
@@ -278,7 +279,8 @@ func (r *Renderer) setDefaultTemplates() {
 	case 2: // /pages/create or /pages/1 etc
 		pkg = parts[0]
 		action = parts[1]
-		numeric, _ := regexp.MatchString("^[0-9]*$", parts[1])
+		// NB the +, we require 1 or more digits
+		numeric, _ := regexp.MatchString("^[0-9]+", parts[1])
 		if numeric {
 			action = "show"
 		}
@@ -286,6 +288,8 @@ func (r *Renderer) setDefaultTemplates() {
 		pkg = parts[0]
 		action = parts[2]
 	}
+
+	//	fmt.Printf("#templates setting default template:%s/views/%s.html.got", pkg, action)
 
 	// Set a default template
 	path := fmt.Sprintf("%s/views/%s.html.got", pkg, action)

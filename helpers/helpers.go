@@ -97,23 +97,6 @@ func Blank(s string) bool {
 	return (len(s) == 0)
 }
 
-// FIXME - danger global - what happens when running multiple threads
-// better instead to use $i of range function...
-// This is ugly and requires CounterReset() - check usage
-var i int
-
-// Counter is deprecated
-func Counter() bool {
-	i = i + 1
-	return (i%2 == 1)
-}
-
-// CounterReset is deprecated
-func CounterReset() string {
-	i = 0
-	return ""
-}
-
 // Time returns a formatted time string given a time and optional format
 func Time(time time.Time, formats ...string) got.HTML {
 	layout := "Jan 2, 2006 at 15:04"
