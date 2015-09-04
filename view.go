@@ -23,7 +23,13 @@ var Helpers map[string]interface{}
 // Production is true if this server is running in production mode
 var Production bool
 
+func init() {
+	// Set up our helper functions
+	Helpers = DefaultHelpers()
+}
+
 // DefaultHelpers returns a default set of helpers for the app, which can then be extended/replaced
+// NB if you change helper functions the templates must be reloaded at least once afterwards
 func DefaultHelpers() parser.FuncMap {
 	funcs := make(parser.FuncMap)
 
@@ -94,11 +100,6 @@ func DefaultHelpers() parser.FuncMap {
 
 // LoadTemplates loads our templates, and assigns them to the package variable Templates
 func LoadTemplates() error {
-
-	// Set up our helper functions if necessary
-	if Helpers == nil {
-		Helpers = DefaultHelpers()
-	}
 
 	// Scan all templates within the directories under us
 	scanner, err := parser.NewScanner()
