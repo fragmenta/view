@@ -160,7 +160,7 @@ func (r *Renderer) Render(writer http.ResponseWriter) error {
 	// FIXME - we need a mutex on reloading templates, though we only do this on development
 	// we must still ensure that we don't reloading during a request
 	if !Production {
-		fmt.Println("#info Reloading templates in development mode")
+		fmt.Printf("#warn Reloading templates in development mode")
 		LoadTemplates()
 	}
 
