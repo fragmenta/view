@@ -139,8 +139,7 @@ func (r *Renderer) RenderString() (string, error) {
 // Render our template into layout using our context and write out to writer
 func (r *Renderer) Render(writer http.ResponseWriter) error {
 
-	// FIXME - we need a mutex on reloading templates, though we only do this on development
-	// we must still ensure that we don't reloading during a request
+	// Reload if not in production
 	if !Production {
 		fmt.Printf("#warn Reloading templates in development mode\n")
 		LoadTemplates()
