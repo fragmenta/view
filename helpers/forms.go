@@ -154,6 +154,8 @@ func NumberOptions(args ...int64) []SelectableOption {
 	return options
 }
 
+// Better to use an interface and not reflect here - Would rather avoid use of reflect...
+
 // OptionsForSelect creates a select field given an array of keys and values in order
 func OptionsForSelect(value interface{}, options interface{}) got.HTML {
 
