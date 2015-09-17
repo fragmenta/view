@@ -3,8 +3,6 @@ package view
 
 import (
 	"fmt"
-	"io"
-	"net/http"
 	"sync"
 
 	"github.com/fragmenta/view/helpers"
@@ -118,54 +116,4 @@ func PrintTemplates() {
 		fmt.Printf("Template %s", k)
 	}
 	fmt.Printf("Finished scan of templates")
-}
-
-// RenderStatus renders a status code for the user, using a default template (if available)
-func RenderStatus(writer http.ResponseWriter, status int) {
-	writer.Header().Set("Content-Type", "text/html; charset=utf-8")
-	writer.WriteHeader(status)
-
-	var title, message string
-
-	switch status {
-
-	case http.StatusUnauthorized, http.StatusForbidden:
-		title = "Unauthorized"
-		message = "Sorry, you don't have permission to perform that action."
-
-	case http.StatusInternalServerError:
-		title = "Server Error"
-		message = "Sorry, an error occurred. Please let us know."
-
-	case http.StatusNotFound:
-		title = "Not Found"
-		message = "Sorry, we couldn't find the requested page. If you think this was an error, please let us know."
-
-	case http.StatusTeapot:
-		title = "Teapot!"
-		message = "I'm a little teapot, short and stout."
-
-	default:
-		title = "Oops"
-		message = "Sorry, something went wrong, please let us know"
-	}
-
-	// Template name
-	statusTemplate := fmt.Sprintf("app/views/%d.html.got", status)
-	t := Templates[statusTemplate]
-	if t != nil {
-		c := map[string]interface{}{
-			"title":   title,
-			"message": message,
-			"status":  status,
-		}
-		err := t.Render(writer, c)
-		if err == nil {
-			return
-		}
-	}
-
-	// If not or error render a simple error page
-	io.WriteString(writer, fmt.Sprintf("<h1>%s</h1><p>%s</p><p>Status:%d</p>", title, message, status))
-
 }

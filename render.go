@@ -11,11 +11,14 @@ import (
 	"strings"
 )
 
-// Renderer is a view which is set up on each request and renders the response
+// Renderer is a view which is set up on each request and renders the response to its writer
 type Renderer struct {
 
 	// The view rendering context
 	context map[string]interface{}
+
+	// The writer to write the context to
+	writer http.ResponseWriter
 
 	// The layout template to render in
 	layout string
@@ -33,14 +36,16 @@ type Renderer struct {
 	path string
 }
 
-// RenderData is the type passed in to New, which helps construct the rendering view
-type RenderData interface {
+// RenderContext is the type passed in to New, which helps construct the rendering view
+// Alternatively, you can use NewWithPath, which doesn't require a RenderContext
+type RenderContext interface {
 	Path() string
 	RenderContext() map[string]interface{}
+	Writer() http.ResponseWriter
 }
 
 // New creates a new Renderer
-func New(c RenderData) *Renderer {
+func New(c RenderContext) *Renderer {
 	r := &Renderer{
 		path:     c.Path(),
 		layout:   "app/views/layout.html.got",
@@ -48,9 +53,26 @@ func New(c RenderData) *Renderer {
 		format:   "text/html",
 		status:   http.StatusOK,
 		context:  c.RenderContext(),
+		writer:   c.Writer(),
 	}
 
-	// Append the passed in data
+	// This sets layout and template based on the view.path
+	r.setDefaultTemplates()
+
+	return r
+}
+
+// New creates a new Renderer
+func NewWithPath(p string, w http.ResponseWriter) *Renderer {
+	r := &Renderer{
+		path:     p,
+		layout:   "app/views/layout.html.got",
+		template: "",
+		format:   "text/html",
+		status:   http.StatusOK,
+		context:  make(map[string]interface{}, 0),
+		writer:   w,
+	}
 
 	// This sets layout and template based on the view.path
 	r.setDefaultTemplates()
@@ -112,8 +134,8 @@ func (r *Renderer) Context(c map[string]interface{}) *Renderer {
 	return r
 }
 
-// RenderString renders our template into layout using our context and return a string - FIXME - rename to RenderToString
-func (r *Renderer) RenderString() (string, error) {
+// RenderToString renders our template into layout using our context and return a string
+func (r *Renderer) RenderToString() (string, error) {
 
 	content := ""
 
@@ -137,7 +159,7 @@ func (r *Renderer) RenderString() (string, error) {
 }
 
 // Render our template into layout using our context and write out to writer
-func (r *Renderer) Render(writer http.ResponseWriter) error {
+func (r *Renderer) Render() error {
 
 	// Reload if not in production
 	if !Production {
@@ -151,19 +173,13 @@ func (r *Renderer) Render(writer http.ResponseWriter) error {
 
 		t := Templates[r.template]
 		if t == nil {
-			err := fmt.Errorf("No such template found %s", r.template)
-			r.RenderError(writer, err)
-
-			return err
+			return fmt.Errorf("No such template found %s", r.template)
 		}
 
 		var rendered bytes.Buffer
 		err := t.Render(&rendered, r.context)
 		if err != nil {
-			errfull := fmt.Errorf("Could not render template %s - %s", r.template, err)
-			r.RenderError(writer, errfull)
-
-			return err
+			return fmt.Errorf("Could not render template %s - %s", r.template, err)
 		}
 
 		if r.layout != "" {
@@ -176,74 +192,24 @@ func (r *Renderer) Render(writer http.ResponseWriter) error {
 	// Now render the content into the layout template
 	if r.layout != "" {
 		layout := Templates[r.layout]
-
-		// log.Printf("Using layout %v",Templates)
-
 		if layout == nil {
-			err := fmt.Errorf("Could not find layout %s in %s", r.layout, Templates)
-			r.RenderError(writer, err)
-
-			return err
+			return fmt.Errorf("Could not find layout %s in %s", r.layout, Templates)
 		}
 
-		err := layout.Render(writer, r.context)
+		err := layout.Render(r.writer, r.context)
 		if err != nil {
-			err := fmt.Errorf("Could not render layout %s %s", r.layout, err)
-			r.RenderError(writer, err)
-
-			return err
+			return fmt.Errorf("Could not render layout %s %s", r.layout, err)
 		}
 
 	} else if r.context["content"] != nil {
 		// Deal with no layout by rendering content directly to writer
-		_, err := io.WriteString(writer, r.context["content"].(string))
-		writer.Header().Set("Content-Type", r.format+"; charset=utf-8")
-		writer.WriteHeader(r.status)
+		_, err := io.WriteString(r.writer, r.context["content"].(string))
+		r.writer.Header().Set("Content-Type", r.format+"; charset=utf-8")
+		r.writer.WriteHeader(r.status)
 		return err
 	}
 
 	return nil
-}
-
-// RenderError renders our our error template using our context and write out to writer
-func (r *Renderer) RenderError(writer http.ResponseWriter, err error) {
-	r.status = http.StatusInternalServerError
-
-	// FIXME - need two things here - need debug status (to show errors + stack trace)
-	// need log reference to log properly to log file
-
-	// Need to log this here, but that's up to the app no?
-	// If this were on router, we could log the error there, so consider moving it?
-	fmt.Printf("#error %s\n", err)
-
-	// Assign the error to the context so that the template can use it
-	if !Production {
-		r.context["error"] = err
-	}
-
-	// Check if app/views/500.html.got exists, use that with our view context
-	t := Templates["app/views/500.html.got"]
-	if t != nil {
-		writer.Header().Set("Content-Type", "text/html; charset=utf-8")
-		writer.WriteHeader(r.status)
-
-		err := t.Render(writer, r.context)
-		if err != nil {
-			fmt.Printf("ERROR on render error:%s\n", err)
-			RenderStatus(writer, r.status)
-		}
-
-		return
-	}
-
-	// If not template fall back on render status for default error
-	RenderStatus(writer, r.status)
-}
-
-// RenderStatus renders a given status
-func (r *Renderer) RenderStatus(writer http.ResponseWriter, status int) {
-	r.status = status
-	RenderStatus(writer, status)
 }
 
 // Set sensible default layout/template paths after we know our path
