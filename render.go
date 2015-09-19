@@ -62,7 +62,7 @@ func New(c RenderContext) *Renderer {
 	return r
 }
 
-// New creates a new Renderer
+// NewWithPath creates a new Renderer with a path and an http.ResponseWriter
 func NewWithPath(p string, w http.ResponseWriter) *Renderer {
 	r := &Renderer{
 		path:     p,
@@ -98,7 +98,7 @@ func (r *Renderer) Format(format string) *Renderer {
 	return r
 }
 
-// Path sets the path
+// Path sets the request path on the renderer (used for choosing a default template)
 func (r *Renderer) Path(p string) *Renderer {
 	r.path = path.Clean(p)
 	return r
