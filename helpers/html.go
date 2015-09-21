@@ -69,7 +69,7 @@ func Strip(s string) got.HTML {
 func Sanitize(s string, args ...[]string) got.HTML {
 
 	var ignoreTags = []string{"title", "script", "style", "iframe", "frame", "frameset", "noframes", "noembed", "embed", "applet", "object"}
-	var defaultTags = []string{"h1", "h2", "h3", "h4", "h5", "h6", "div", "span", "hr", "p", "br", "b", "i", "ol", "ul", "li", "strong", "em", "a", "img"}
+	var defaultTags = []string{"h1", "h2", "h3", "h4", "h5", "h6", "div", "span", "hr", "p", "br", "b", "i", "ol", "ul", "li", "strong", "em", "a", "img", "pre", "code"}
 	var defaultAttributes = []string{"id", "class", "src", "title", "alt", "name", "rel", "href"}
 
 	allowedTags := defaultTags
