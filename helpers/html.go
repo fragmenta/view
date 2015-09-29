@@ -1,18 +1,15 @@
 package helpers
 
 import (
-	"bytes"
 	"fmt"
-	got "html/template"
-	"io"
 	"strings"
 
-	parser "github.com/fragmenta/view/internal/html"
+	got "html/template"
+
+	"github.com/kennygrant/sanitize"
 )
 
-// NB all HTML with user input must be escaped, see https://www.owasp.org/index.php/XSS_Prevention_Cheatsheet
 
-// These two should instead be using assets package?
 
 // Style inserts a css tag
 func Style(name string) got.HTML {
@@ -61,112 +58,16 @@ func URL(s string) got.URL {
 
 // Strip all html tags and returns as go template HTML
 func Strip(s string) got.HTML {
-	return Sanitize(s, []string{}, []string{})
+	return got.HTML(sanitize.HTML(s))
 }
 
-// Sanitize sanitises html, allowing some tags using the html parser from golang.org/x/net/html and returns as go template HTML
-// Usage: sanitize.HTMLAllowing("<b id=id>my html</b>",[]string{"b"},[]string{"id")
-func Sanitize(s string, args ...[]string) got.HTML {
-
-	var ignoreTags = []string{"title", "script", "style", "iframe", "frame", "frameset", "noframes", "noembed", "embed", "applet", "object"}
-	var defaultTags = []string{"h1", "h2", "h3", "h4", "h5", "h6", "div", "span", "hr", "p", "br", "b", "i", "ol", "ul", "li", "strong", "em", "a", "img", "pre", "code"}
-	var defaultAttributes = []string{"id", "class", "src", "title", "alt", "name", "rel", "href"}
-
-	allowedTags := defaultTags
-	if len(args) > 0 {
-		allowedTags = args[0]
-	}
-	allowedAttributes := defaultAttributes
-	if len(args) > 1 {
-		allowedAttributes = args[1]
-	}
-
-	// Parse the html
-	tokenizer := parser.NewTokenizer(strings.NewReader(s))
-
-	buffer := bytes.NewBufferString("")
-	ignore := ""
-
-	for {
-		tokenType := tokenizer.Next()
-		token := tokenizer.Token()
-
-		switch tokenType {
-
-		case parser.ErrorToken:
-			err := tokenizer.Err()
-			if err == io.EOF {
-				return got.HTML(buffer.String())
-			}
-
-			fmt.Println("Error parsing html") // we should perhaps return an error
-			return got.HTML("")
-
-		case parser.StartTagToken:
-
-			if len(ignore) == 0 && includes(allowedTags, token.Data) {
-				token.Attr = cleanAttributes(token.Attr, allowedAttributes)
-				buffer.WriteString(token.String())
-			} else if includes(ignoreTags, token.Data) {
-				ignore = token.Data
-			}
-
-		case parser.SelfClosingTagToken:
-
-			if len(ignore) == 0 && includes(allowedTags, token.Data) {
-				token.Attr = cleanAttributes(token.Attr, allowedAttributes)
-				buffer.WriteString(token.String())
-			} else if token.Data == ignore {
-				ignore = ""
-			}
-
-		case parser.EndTagToken:
-			if len(ignore) == 0 && includes(allowedTags, token.Data) {
-				token.Attr = []parser.Attribute{}
-				buffer.WriteString(token.String())
-			} else if token.Data == ignore {
-				ignore = ""
-			}
-
-		case parser.TextToken:
-			// We allow text content through, unless ignoring this entire tag and its contents (including other tags)
-			if ignore == "" {
-				buffer.WriteString(token.String())
-			}
-		case parser.CommentToken:
-			// We ignore comments by default
-		case parser.DoctypeToken:
-			// We ignore doctypes by default - html5 does not require them and this is intended for sanitizing snippets of text
-		default:
-			// We ignore unknown token types by default
-
-		}
-
-	}
-
+// Sanitize the html, leaving only tags we consider safe (see the sanitize package for details and tests)
+func Sanitize(s string) got.HTML {
+    s, err := sanitize.HTMLAllowing(s)
+    if err != nil {
+        fmt.Printf("#error sanitizing html:%s",err)
+        return got.HTML("")
+    }
+	return got.HTML(s)
 }
 
-// cleanAttributes removes all attributes except those in the allowed list
-func cleanAttributes(a []parser.Attribute, allowed []string) []parser.Attribute {
-	if len(a) == 0 {
-		return a
-	}
-
-	var cleaned []parser.Attribute
-	for _, attr := range a {
-		if includes(allowed, attr.Key) {
-			cleaned = append(cleaned, attr)
-		}
-	}
-	return cleaned
-}
-
-// includes returns true if this array of strings contains string s
-func includes(a []string, s string) bool {
-	for _, as := range a {
-		if as == s {
-			return true
-		}
-	}
-	return false
-}
