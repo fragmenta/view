@@ -20,13 +20,13 @@ type Scanner struct {
 	Paths []string
 }
 
+// NewScanner creates a new template scanner
 func NewScanner() (*Scanner, error) {
-	// Create a new template scanner
 	s := &Scanner{}
 
 	s.Templates = map[string]Template{}
 	s.Parsers = []Parser{
-        new(JSONTemplate),
+		new(JSONTemplate),
 		new(HTMLTemplate),
 		new(TextTemplate),
 	}
@@ -34,7 +34,7 @@ func NewScanner() (*Scanner, error) {
 	return s, nil
 }
 
-// Scan a path for template files, including sub-paths
+// ScanPath scans a path for template files, including sub-paths
 func (s *Scanner) ScanPath(root string, helpers FuncMap) error {
 
 	s.Paths = append(s.Paths, root)
@@ -109,7 +109,7 @@ func (s *Scanner) ScanPath(root string, helpers FuncMap) error {
 	return nil
 }
 
-// Rescan all template paths
+// RescanPaths rescans all template paths
 func (s *Scanner) RescanPaths(helpers FuncMap) error {
 	// Make sure templates is empty
 	s.Templates = make(map[string]Template)
@@ -127,12 +127,12 @@ func (s *Scanner) RescanPaths(helpers FuncMap) error {
 
 // PATH UTILITIES
 
-// Is the file path supplied a dot file?
+// dotFile returns true if the file path supplied a dot file?
 func dotFile(p string) bool {
 	return strings.HasPrefix(path.Base(p), ".")
 }
 
-// Does the path have this suffix (ignoring dotfiles)?
+// suffix returns true if the path have this suffix (ignoring dotfiles)?
 func suffix(p string, suffix string) bool {
 	if dotFile(p) {
 		return false
@@ -140,7 +140,7 @@ func suffix(p string, suffix string) bool {
 	return strings.HasSuffix(p, suffix)
 }
 
-// Does the path have these suffixes (ignoring dotfiles)?
+// suffixes returns true if the path has these suffixes (ignoring dotfiles)?
 func suffixes(p string, suffixes []string) bool {
 	if dotFile(p) {
 		return false

@@ -3,12 +3,10 @@ package parser
 import (
 	"fmt"
 	"io"
-	"regexp"
 	got "text/template"
 )
 
 var textTemplateSet *got.Template
-var textTemplateInclude *regexp.Regexp
 
 // A HTML template using go HTML/template - NB this is not escaped and unsafe in HTML.
 type TextTemplate struct {
@@ -18,16 +16,13 @@ type TextTemplate struct {
 // Perform setup before parsing templates
 func (t *TextTemplate) StartParse(viewsPath string, helpers FuncMap) error {
 	textTemplateSet = got.New("").Funcs(got.FuncMap(helpers))
-
-	// e.g. {{ template "shared/header.html" . }}
-	textTemplateInclude = regexp.MustCompile(`{{\s*template\s*["]([\S]*)["].*}}`)
 	return nil
 }
 
 // Can this parser handle this file path?
 // test.csv.gotext
 func (t *TextTemplate) CanParseFile(path string) bool {
-	allowed := []string{".text.got",".csv.got"}
+	allowed := []string{".text.got", ".csv.got"}
 	return suffixes(path, allowed)
 }
 
@@ -70,7 +65,7 @@ func (t *TextTemplate) ParseString(s string) error {
 func (t *TextTemplate) Finalize(templates map[string]Template) error {
 
 	// Search source for {{\s template "|`xxx`|" x }} pattern
-	paths := textTemplateInclude.FindAllStringSubmatch(t.Source(), -1)
+	paths := templateInclude.FindAllStringSubmatch(t.Source(), -1)
 
 	// For all includes found, add the template to our dependency list
 	for _, p := range paths {
@@ -83,7 +78,7 @@ func (t *TextTemplate) Finalize(templates map[string]Template) error {
 	return nil
 }
 
-// BaseTemplate renders the template ignoring conHTML
+// Render renders the template
 func (t *TextTemplate) Render(writer io.Writer, context map[string]interface{}) error {
 	tmpl := t.goTemplate()
 	if tmpl == nil {
@@ -93,6 +88,7 @@ func (t *TextTemplate) Render(writer io.Writer, context map[string]interface{}) 
 	return tmpl.Execute(writer, context)
 }
 
+// goTemplate returns teh underlying go template
 func (t *TextTemplate) goTemplate() *got.Template {
 	return textTemplateSet.Lookup(t.Path())
 }
