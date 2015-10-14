@@ -27,7 +27,7 @@ func (t *HTMLTemplate) StartParse(viewsPath string, helpers FuncMap) error {
 
 // CanParseFile returns true if this parser handles this path
 func (t *HTMLTemplate) CanParseFile(path string) bool {
-	allowed := []string{".html.got"}
+	allowed := []string{".html.got", ".xml.got"}
 	return suffixes(path, allowed)
 }
 

@@ -46,6 +46,9 @@ func DefaultHelpers() parser.FuncMap {
 	funcs["strip"] = helpers.Strip
 	funcs["truncate"] = helpers.Truncate
 
+	// XML helpers
+	funcs["xmlpreamble"] = helpers.XMLPreamble
+
 	// Form helpers
 	funcs["field"] = helpers.Field
 	funcs["datefield"] = helpers.DateField
@@ -66,6 +69,7 @@ func DefaultHelpers() parser.FuncMap {
 
 	// String helpers
 	funcs["blank"] = helpers.Blank
+	funcs["exists"] = helpers.Exists
 
 	// Math helpers
 	funcs["mod"] = helpers.Mod

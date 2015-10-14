@@ -94,7 +94,12 @@ func Contains(list []int64, item int64) bool {
 
 // Blank returns true if a string is empty
 func Blank(s string) bool {
-	return (len(s) == 0)
+	return len(s) == 0
+}
+
+// Exists returns true if this string has a length greater than 0
+func Exists(s string) bool {
+	return len(s) > 0
 }
 
 // Time returns a formatted time string given a time and optional format
