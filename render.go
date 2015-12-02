@@ -173,13 +173,13 @@ func (r *Renderer) Render() error {
 
 		t := Templates[r.template]
 		if t == nil {
-			return fmt.Errorf("No such template found %s", r.template)
+			return fmt.Errorf("#error No such template found %s", r.template)
 		}
 
 		var rendered bytes.Buffer
 		err := t.Render(&rendered, r.context)
 		if err != nil {
-			return fmt.Errorf("Could not render template %s - %s", r.template, err)
+			return fmt.Errorf("#error Could not render template %s - %s", r.template, err)
 		}
 
 		if r.layout != "" {
@@ -193,12 +193,12 @@ func (r *Renderer) Render() error {
 	if r.layout != "" {
 		layout := Templates[r.layout]
 		if layout == nil {
-			return fmt.Errorf("Could not find layout %s in %s", r.layout, Templates)
+			return fmt.Errorf("#error Could not find layout %s", r.layout)
 		}
 
 		err := layout.Render(r.writer, r.context)
 		if err != nil {
-			return fmt.Errorf("Could not render layout %s %s", r.layout, err)
+			return fmt.Errorf("#error Could not render layout %s %s", r.layout, err)
 		}
 
 	} else if r.context["content"] != nil {
