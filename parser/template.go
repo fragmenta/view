@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"regexp"
 )
 
-// A template renders its content given a ViewContext
+// Template renders its content given a ViewContext
 type Template interface {
 	// Parse a template file
 	Parse(path string) error
@@ -31,25 +32,31 @@ type Template interface {
 	Dependencies() []Template
 }
 
+var templateInclude = regexp.MustCompile(`{{\s*template\s*["]([\S]*)["].*}}`)
+
+// MaxCacheKeyLength determines the max key length for cache keys
 var MaxCacheKeyLength = 250
 
-// A base template which conforms to Template and Parser interfaces.
+// TODO - base template is a mixin, get rid of all methods which are going to be overridden like StartParse
+
+// BaseTemplate is a base template which conforms to Template and Parser interfaces.
 // This is an abstract base type, we use html or text templates
 type BaseTemplate struct {
 	path         string
 	source       string     // at present we store in memory
 	key          string     // set at parse time
 	dependencies []Template // set at parse time
+
 }
 
 // PARSER
 
-// Start parsing
+// StartParse starts parsing - the default implementation does nothing
 func (t *BaseTemplate) StartParse(viewsPath string, helpers FuncMap) error {
 	return nil
 }
 
-// Can parse file
+// CanParseFile returns true if we can parse this file
 func (t *BaseTemplate) CanParseFile(path string) bool {
 	if dotFile(path) {
 		return false
@@ -58,14 +65,14 @@ func (t *BaseTemplate) CanParseFile(path string) bool {
 	return true
 }
 
-// Return a newly created template for this path
+// NewTemplate returns a newly created template for this path
 func (t *BaseTemplate) NewTemplate(path string) (Template, error) {
 	template := new(BaseTemplate)
 	err := template.Parse(path)
 	return template, err
 }
 
-// Finish parsing this path
+// FinishParse finishes parsing this path
 func (t *BaseTemplate) FinishParse(viewsPath string) error {
 	return nil
 }
@@ -84,20 +91,20 @@ func (t *BaseTemplate) Parse(path string) error {
 	return err
 }
 
-// Parse a string template
+// ParseString a string template
 func (t *BaseTemplate) ParseString(s string) error {
 	t.path = t.generateHash(s)
 	t.source = s
 	return nil
 }
 
-// BaseTemplate renders the template ignoring context
+// Render the template ignoring context
 func (t *BaseTemplate) Render(writer io.Writer, context map[string]interface{}) error {
 	writer.Write([]byte(t.Source()))
 	return nil
 }
 
-// Called on each template after parsing is finished, supplying complete template set.
+// Finalize is called on each template after parsing is finished, supplying complete template set.
 func (t *BaseTemplate) Finalize(templates map[string]Template) error {
 
 	t.dependencies = []Template{}
@@ -105,17 +112,17 @@ func (t *BaseTemplate) Finalize(templates map[string]Template) error {
 	return nil
 }
 
-// Return the parsed version of this template
+// Source the parsed version of this template
 func (t *BaseTemplate) Source() string {
 	return t.source
 }
 
-// Return the path of this template
+// Path returns the path of this template
 func (t *BaseTemplate) Path() string {
 	return t.path
 }
 
-// Return the cache key of this template -
+// CacheKey returns the cache key of this template -
 // (this is generated from path + hash of contents + dependency hash keys).
 // So it automatically changes when templates are changed
 func (t *BaseTemplate) CacheKey() string {
@@ -146,7 +153,7 @@ func (t *BaseTemplate) CacheKey() string {
 	return t.key
 }
 
-// Return which other templates this one depends on (for generating nested cache keys)
+// Dependencies returns which other templates this one depends on (for generating nested cache keys)
 func (t *BaseTemplate) Dependencies() []Template {
 	return t.dependencies
 }
@@ -163,6 +170,8 @@ func (t *BaseTemplate) readFile(path string) (string, error) {
 
 // Utility method to generate a hash from string
 func (t *BaseTemplate) generateHash(input string) string {
+
+	// FIXME: use sha256, not md5
 	h := md5.New()
 	io.WriteString(h, input)
 	return fmt.Sprintf("%x", h.Sum(nil))

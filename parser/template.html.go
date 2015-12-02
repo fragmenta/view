@@ -4,40 +4,44 @@ import (
 	"fmt"
 	got "html/template"
 	"io"
-	"regexp"
+	"sync"
 )
 
-var htmlTemplateSet *got.Template
-var htmlTemplateInclude *regexp.Regexp
+var (
+	mu              sync.RWMutex  // Shared mutex to go with shared template set, because of dev reloads
+	htmlTemplateSet *got.Template // This is a shared template set for HTML templates
+)
 
-// A HTML template using go HTML/template - NB this is not escaped and unsafe in HTML.
+// HTMLTemplate represents an HTML template using go HTML/template
 type HTMLTemplate struct {
 	BaseTemplate
 }
 
-// Perform setup before parsing templates
+// StartParse performs setup before parsing templates
 func (t *HTMLTemplate) StartParse(viewsPath string, helpers FuncMap) error {
+	mu.Lock()
+	defer mu.Unlock()
 	htmlTemplateSet = got.New("").Funcs(got.FuncMap(helpers))
-	// e.g. {{ template "shared/header.html" . }}
-	htmlTemplateInclude = regexp.MustCompile(`{{\s*template\s*["]([\S]*)["].*}}`)
 	return nil
 }
 
-// Can this parser handle this file path?
-// test.csv.got
+// CanParseFile returns true if this parser handles this path
 func (t *HTMLTemplate) CanParseFile(path string) bool {
-	allowed := []string{".html.got"}
+	allowed := []string{".html.got", ".xml.got"}
 	return suffixes(path, allowed)
 }
 
+// NewTemplate returns a new template for this type
 func (t *HTMLTemplate) NewTemplate(path string) (Template, error) {
 	template := new(HTMLTemplate)
 	err := template.Parse(path)
 	return template, err
 }
 
-// Parse the template
+// Parse the template at path
 func (t *HTMLTemplate) Parse(path string) error {
+	mu.Lock()
+	defer mu.Unlock()
 	err := t.BaseTemplate.Parse(path)
 
 	// Add to our template set
@@ -50,8 +54,10 @@ func (t *HTMLTemplate) Parse(path string) error {
 	return err
 }
 
-// Parse a string template
+// ParseString parses a string template
 func (t *HTMLTemplate) ParseString(s string) error {
+	mu.Lock()
+	defer mu.Unlock()
 	err := t.BaseTemplate.ParseString(s)
 
 	// Add to our template set
@@ -64,7 +70,7 @@ func (t *HTMLTemplate) ParseString(s string) error {
 	return err
 }
 
-// Finalise the template set, called after parsing is complete
+// Finalize the template set, called after parsing is complete
 func (t *HTMLTemplate) Finalize(templates map[string]Template) error {
 
 	// Go html/template records dependencies both ways (child <-> parent)
@@ -73,7 +79,7 @@ func (t *HTMLTemplate) Finalize(templates map[string]Template) error {
 	// so just do a simple search of parsed source instead
 
 	// Search source for {{\s template "|`xxx`|" x }} pattern
-	paths := htmlTemplateInclude.FindAllStringSubmatch(t.Source(), -1)
+	paths := templateInclude.FindAllStringSubmatch(t.Source(), -1)
 
 	// For all includes found, add the template to our dependency list
 	for _, p := range paths {
@@ -86,10 +92,10 @@ func (t *HTMLTemplate) Finalize(templates map[string]Template) error {
 	return nil
 }
 
+// Render the template to the given writer, returning an error
 func (t *HTMLTemplate) Render(writer io.Writer, context map[string]interface{}) error {
-	return t.got().Execute(writer, context)
-}
-
-func (t *HTMLTemplate) got() *got.Template {
-	return htmlTemplateSet.Lookup(t.Path())
+	mu.RLock()
+	defer mu.RUnlock()
+	tmpl := htmlTemplateSet.Lookup(t.Path())
+	return tmpl.Execute(writer, context)
 }

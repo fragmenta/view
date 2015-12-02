@@ -9,8 +9,6 @@ import (
 	"github.com/kennygrant/sanitize"
 )
 
-
-
 // Style inserts a css tag
 func Style(name string) got.HTML {
 	return got.HTML(fmt.Sprintf("<link href=\"/assets/styles/%s.css\" media=\"all\" rel=\"stylesheet\" type=\"text/css\" />", EscapeURL(name)))
@@ -63,11 +61,17 @@ func Strip(s string) got.HTML {
 
 // Sanitize the html, leaving only tags we consider safe (see the sanitize package for details and tests)
 func Sanitize(s string) got.HTML {
-    s, err := sanitize.HTMLAllowing(s)
-    if err != nil {
-        fmt.Printf("#error sanitizing html:%s",err)
-        return got.HTML("")
-    }
+	s, err := sanitize.HTMLAllowing(s)
+	if err != nil {
+		fmt.Printf("#error sanitizing html:%s", err)
+		return got.HTML("")
+	}
 	return got.HTML(s)
 }
 
+// XMLPreamble returns an XML preamble as got.HTML,
+// primarily to work around a bug in html/template which escapes <?
+// see https://github.com/golang/go/issues/12496
+func XMLPreamble() got.HTML {
+	return `<?xml version="1.0" encoding="UTF-8"?>`
+}

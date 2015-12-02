@@ -12,8 +12,9 @@ import (
 // The template sets, loaded on startup for production and on every request for development
 var Templates map[string]parser.Template
 
-// This mutex guards the above Templates variable during reload
-var mu sync.Mutex
+// This mutex guards the above Templates variable during reload and access
+// it is only neccessary because of hot reload during development
+var mu sync.RWMutex
 
 // Helper functions available in templates
 var Helpers map[string]interface{}
@@ -22,7 +23,7 @@ var Helpers map[string]interface{}
 var Production bool
 
 func init() {
-	// Set up our helper functions
+	// Set up our helper functions - instead use DefaultHelpers within LoadTemplates and LoadThemes
 	Helpers = DefaultHelpers()
 }
 
@@ -45,6 +46,9 @@ func DefaultHelpers() parser.FuncMap {
 	funcs["strip"] = helpers.Strip
 	funcs["truncate"] = helpers.Truncate
 
+	// XML helpers
+	funcs["xmlpreamble"] = helpers.XMLPreamble
+
 	// Form helpers
 	funcs["field"] = helpers.Field
 	funcs["datefield"] = helpers.DateField
@@ -65,6 +69,7 @@ func DefaultHelpers() parser.FuncMap {
 
 	// String helpers
 	funcs["blank"] = helpers.Blank
+	funcs["exists"] = helpers.Exists
 
 	// Math helpers
 	funcs["mod"] = helpers.Mod
@@ -90,8 +95,16 @@ func DefaultHelpers() parser.FuncMap {
 	return funcs
 }
 
+// TODO:
+// this should take a string path, and perhaps a parser.FuncMap
+// Perhaps wrap Templates in an accessor with RLock to get rid of that pkg var too
+// Change at same time as adding Themes
+
 // LoadTemplates loads our templates, and assigns them to the package variable Templates
 func LoadTemplates() error {
+
+	mu.Lock()
+	defer mu.Unlock()
 
 	// Scan all templates within the directories under us
 	scanner, err := parser.NewScanner()
@@ -103,8 +116,7 @@ func LoadTemplates() error {
 	if err != nil {
 		return err
 	}
-	mu.Lock()
-	defer mu.Unlock()
+
 	Templates = scanner.Templates
 
 	return nil
@@ -112,6 +124,8 @@ func LoadTemplates() error {
 
 // PrintTemplates prints out our list of templates for debug
 func PrintTemplates() {
+	mu.RLock()
+	defer mu.RUnlock()
 	for k := range Templates {
 		fmt.Printf("Template %s", k)
 	}
