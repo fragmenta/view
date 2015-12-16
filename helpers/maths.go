@@ -8,7 +8,6 @@ import (
 
 // PRICES
 
-
 // FIXME - move to currency type with concrete implementations per currency, as it'd be neater than funcs with multiple options.  currency.GBP.PriceToCents something like that?
 
 // PriceToCentsString returns a price in cents as a string for use in params
@@ -58,6 +57,18 @@ func PriceToCents(p string) int {
 // or not include it at all
 func CentsToPrice(p int64) string {
 	price := fmt.Sprintf("£%.2f", float64(p)/100.0)
+	return strings.TrimSuffix(price, ".00") // remove zero pence at end if we have it
+}
+
+// CentsToPriceShort converts a price in pence to a human friendly price abreviated (no pence)
+func CentsToPriceShort(p int64) string {
+	currency := "£"
+	trailing := ""
+	if p > 100000 {
+		p = p / 1000
+		trailing = "k"
+	}
+	price := fmt.Sprintf("%s%d%s", currency, p/100, trailing)
 	return strings.TrimSuffix(price, ".00") // remove zero pence at end if we have it
 }
 

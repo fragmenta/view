@@ -90,6 +90,7 @@ func DefaultHelpers() parser.FuncMap {
 	// Numeric helpers - clean up and accept currency and other options in centstoprice
 	funcs["centstobase"] = helpers.CentsToBase
 	funcs["centstoprice"] = helpers.CentsToPrice
+	funcs["centstopriceshort"] = helpers.CentsToPriceShort
 	funcs["pricetocents"] = helpers.PriceToCents
 
 	return funcs
