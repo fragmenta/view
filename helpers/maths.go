@@ -64,7 +64,7 @@ func CentsToPrice(p int64) string {
 func CentsToPriceShort(p int64) string {
 	currency := "£"
 	trailing := ""
-	if p > 100000 {
+	if p > 99900 {
 		p = p / 1000
 		trailing = "k"
 	}
