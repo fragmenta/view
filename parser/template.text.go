@@ -8,33 +8,34 @@ import (
 
 var textTemplateSet *got.Template
 
-// A HTML template using go HTML/template - NB this is not escaped and unsafe in HTML.
+// TextTemplate using go text/template
 type TextTemplate struct {
 	BaseTemplate
 }
 
-// Perform setup before parsing templates
-func (t *TextTemplate) StartParse(viewsPath string, helpers FuncMap) error {
+// Setup runs before parsing templates
+func (t *TextTemplate) Setup(helpers FuncMap) error {
 	textTemplateSet = got.New("").Funcs(got.FuncMap(helpers))
 	return nil
 }
 
-// Can this parser handle this file path?
-// test.csv.gotext
+// CanParseFile returns true if this parser handles this file path?
 func (t *TextTemplate) CanParseFile(path string) bool {
 	allowed := []string{".text.got", ".csv.got"}
 	return suffixes(path, allowed)
 }
 
-func (t *TextTemplate) NewTemplate(path string) (Template, error) {
+// NewTemplate returns a new template of this type
+func (t *TextTemplate) NewTemplate(fullpath, path string) (Template, error) {
 	template := new(TextTemplate)
-	err := template.Parse(path)
-	return template, err
+	template.fullpath = fullpath
+	template.path = path
+	return template, nil
 }
 
 // Parse the template
-func (t *TextTemplate) Parse(path string) error {
-	err := t.BaseTemplate.Parse(path)
+func (t *TextTemplate) Parse() error {
+	err := t.BaseTemplate.Parse()
 
 	// Add to our template set
 	if textTemplateSet.Lookup(t.path) == nil {
@@ -46,7 +47,7 @@ func (t *TextTemplate) Parse(path string) error {
 	return err
 }
 
-// Parse a string template
+// ParseString a string template
 func (t *TextTemplate) ParseString(s string) error {
 	err := t.BaseTemplate.ParseString(s)
 
@@ -60,7 +61,7 @@ func (t *TextTemplate) ParseString(s string) error {
 	return err
 }
 
-// Finalise the template set, called after parsing is complete
+// Finalize the template set, called after parsing is complete
 // Record a list of dependent templates (for breaking caches automatically)
 func (t *TextTemplate) Finalize(templates map[string]Template) error {
 

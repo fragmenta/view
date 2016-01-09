@@ -17,8 +17,8 @@ type JSONTemplate struct {
 	BaseTemplate
 }
 
-// StartParse performs one-time setup before parsing templates
-func (t *JSONTemplate) StartParse(viewsPath string, helpers FuncMap) error {
+// Setup performs one-time setup before parsing templates
+func (t *JSONTemplate) Setup(helpers FuncMap) error {
 	mu.Lock()
 	defer mu.Unlock()
 	jsonTemplateSet = got.New("").Funcs(got.FuncMap(helpers))
@@ -32,17 +32,18 @@ func (t *JSONTemplate) CanParseFile(path string) bool {
 }
 
 // NewTemplate returns a new JSONTemplate
-func (t *JSONTemplate) NewTemplate(path string) (Template, error) {
+func (t *JSONTemplate) NewTemplate(fullpath, path string) (Template, error) {
 	template := new(JSONTemplate)
-	err := template.Parse(path)
-	return template, err
+	template.fullpath = fullpath
+	template.path = path
+	return template, nil
 }
 
 // Parse the template
-func (t *JSONTemplate) Parse(path string) error {
+func (t *JSONTemplate) Parse() error {
 	mu.Lock()
 	defer mu.Unlock()
-	err := t.BaseTemplate.Parse(path)
+	err := t.BaseTemplate.Parse()
 
 	// Add to our template set
 	if jsonTemplateSet.Lookup(t.Path()) == nil {

@@ -18,24 +18,25 @@ type Scanner struct {
 
 	// A set of paths (in order) from which to load templates
 	Paths []string
+
+	// Helpers is a list of helper functions
+	Helpers FuncMap
 }
 
 // NewScanner creates a new template scanner
-func NewScanner() (*Scanner, error) {
-	s := &Scanner{}
-
-	s.Templates = map[string]Template{}
-	s.Parsers = []Parser{
-		new(JSONTemplate),
-		new(HTMLTemplate),
-		new(TextTemplate),
+func NewScanner(paths []string, helpers FuncMap) (*Scanner, error) {
+	s := &Scanner{
+		Helpers:   helpers,
+		Paths:     paths,
+		Templates: make(map[string]Template),
+		Parsers:   []Parser{new(JSONTemplate), new(HTMLTemplate), new(TextTemplate)},
 	}
 
 	return s, nil
 }
 
 // ScanPath scans a path for template files, including sub-paths
-func (s *Scanner) ScanPath(root string, helpers FuncMap) error {
+func (s *Scanner) ScanPath(root string) error {
 
 	s.Paths = append(s.Paths, root)
 
@@ -43,6 +44,7 @@ func (s *Scanner) ScanPath(root string, helpers FuncMap) error {
 
 	// Store current path, and change to root path
 	// so that template includes use relative paths from root
+	// this may not be necc. any more, test removing it
 	pwd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -50,11 +52,6 @@ func (s *Scanner) ScanPath(root string, helpers FuncMap) error {
 	err = os.Chdir(root)
 	if err != nil {
 		return err
-	}
-
-	// Set up parsers for this path
-	for _, p := range s.Parsers {
-		p.StartParse(root, helpers)
 	}
 
 	err = filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
@@ -69,7 +66,8 @@ func (s *Scanner) ScanPath(root string, helpers FuncMap) error {
 			for _, p := range s.Parsers {
 				if p.CanParseFile(path) {
 
-					t, err := p.NewTemplate(path)
+					fullpath := filepath.Join(root, path)
+					t, err := p.NewTemplate(fullpath, path)
 					if err != nil {
 						return err
 					}
@@ -88,18 +86,6 @@ func (s *Scanner) ScanPath(root string, helpers FuncMap) error {
 		return err
 	}
 
-	// Finalise templates (build dependency list etc)
-	// Supply them with a full set of templates to do this with
-	// Alternative is to adjust mustache implementation here to give it idea of template set
-	for _, t := range s.Templates {
-		t.Finalize(s.Templates)
-	}
-
-	// Finalise parsers
-	for _, p := range s.Parsers {
-		p.FinishParse(root)
-	}
-
 	// Change back to original path
 	err = os.Chdir(pwd)
 	if err != nil {
@@ -109,14 +95,38 @@ func (s *Scanner) ScanPath(root string, helpers FuncMap) error {
 	return nil
 }
 
-// RescanPaths rescans all template paths
-func (s *Scanner) RescanPaths(helpers FuncMap) error {
+// ScanPaths resets template list and rescans all template paths
+func (s *Scanner) ScanPaths() error {
 	// Make sure templates is empty
 	s.Templates = make(map[string]Template)
 
+	// Set up the parsers
+	for _, p := range s.Parsers {
+		err := p.Setup(s.Helpers)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Scan paths again
 	for _, p := range s.Paths {
-		err := s.ScanPath(p, helpers)
+		err := s.ScanPath(p)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Now parse and finalize templates
+	for _, t := range s.Templates {
+		err := t.Parse()
+		if err != nil {
+			return err
+		}
+	}
+
+	// Now finalize templates
+	for _, t := range s.Templates {
+		err := t.Finalize(s.Templates)
 		if err != nil {
 			return err
 		}

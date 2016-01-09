@@ -141,7 +141,7 @@ func (r *Renderer) RenderToString() (string, error) {
 
 	if len(r.template) > 0 {
 		mu.RLock()
-		t := Templates[r.template]
+		t := scanner.Templates[r.template]
 		mu.RUnlock()
 		if t == nil {
 			return content, fmt.Errorf("No such template found %s", r.template)
@@ -165,14 +165,17 @@ func (r *Renderer) Render() error {
 	// Reload if not in production
 	if !Production {
 		fmt.Printf("#warn Reloading templates in development mode\n")
-		LoadTemplates()
+		err := ReloadTemplates()
+		if err != nil {
+			return err
+		}
 	}
 
 	// If we have a template, render it
 	// using r.Context unless overridden by content being set with .Text("My string")
 	if len(r.template) > 0 && r.context["content"] == nil {
 		mu.RLock()
-		t := Templates[r.template]
+		t := scanner.Templates[r.template]
 		mu.RUnlock()
 		if t == nil {
 			return fmt.Errorf("#error No such template found %s", r.template)
@@ -194,7 +197,7 @@ func (r *Renderer) Render() error {
 	// Now render the content into the layout template
 	if r.layout != "" {
 		mu.RLock()
-		layout := Templates[r.layout]
+		layout := scanner.Templates[r.layout]
 		mu.RUnlock()
 		if layout == nil {
 			return fmt.Errorf("#error Could not find layout %s", r.layout)
@@ -263,13 +266,13 @@ func (r *Renderer) setDefaultTemplates() {
 	// Set a default template
 	mu.RLock()
 	path := fmt.Sprintf("%s/views/%s.html.got", pkg, action)
-	if Templates[path] != nil {
+	if scanner.Templates[path] != nil {
 		r.template = path
 	}
 
 	// Set a default layout
 	path = fmt.Sprintf("%s/views/layout.html.got", pkg)
-	if Templates[path] != nil {
+	if scanner.Templates[path] != nil {
 		r.layout = path
 	}
 	mu.RUnlock()

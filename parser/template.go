@@ -11,7 +11,7 @@ import (
 // Template renders its content given a ViewContext
 type Template interface {
 	// Parse a template file
-	Parse(path string) error
+	Parse() error
 
 	// Called after parsing is finished
 	Finalize(templates map[string]Template) error
@@ -42,7 +42,8 @@ var MaxCacheKeyLength = 250
 // BaseTemplate is a base template which conforms to Template and Parser interfaces.
 // This is an abstract base type, we use html or text templates
 type BaseTemplate struct {
-	path         string
+	fullpath     string     // the full true path from project root
+	path         string     // the relative template path from src - used for unique identifier
 	source       string     // at present we store in memory
 	key          string     // set at parse time
 	dependencies []Template // set at parse time
@@ -51,8 +52,8 @@ type BaseTemplate struct {
 
 // PARSER
 
-// StartParse starts parsing - the default implementation does nothing
-func (t *BaseTemplate) StartParse(viewsPath string, helpers FuncMap) error {
+// Setup sets up the template for parsing
+func (t *BaseTemplate) Setup(viewsPath string, helpers FuncMap) error {
 	return nil
 }
 
@@ -66,24 +67,20 @@ func (t *BaseTemplate) CanParseFile(path string) bool {
 }
 
 // NewTemplate returns a newly created template for this path
-func (t *BaseTemplate) NewTemplate(path string) (Template, error) {
+func (t *BaseTemplate) NewTemplate(fullpath, path string) (Template, error) {
 	template := new(BaseTemplate)
-	err := template.Parse(path)
-	return template, err
-}
-
-// FinishParse finishes parsing this path
-func (t *BaseTemplate) FinishParse(viewsPath string) error {
-	return nil
+	template.fullpath = fullpath
+	template.path = path
+	return template, nil
 }
 
 // TEMPLATE PARSING
 
 // Parse the template (BaseTemplate simply stores it)
-func (t *BaseTemplate) Parse(path string) error {
-	t.path = path
+func (t *BaseTemplate) Parse() error {
+
 	// Read the file
-	s, err := t.readFile(path)
+	s, err := t.readFile(t.fullpath)
 	if err == nil {
 		t.source = s
 	}

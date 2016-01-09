@@ -9,22 +9,32 @@ import (
 	"github.com/fragmenta/view/parser"
 )
 
-// The template sets, loaded on startup for production and on every request for development
-var Templates map[string]parser.Template
-
-// This mutex guards the above Templates variable during reload and access
-// it is only neccessary because of hot reload during development
-var mu sync.RWMutex
-
-// Helper functions available in templates
-var Helpers map[string]interface{}
-
 // Production is true if this server is running in production mode
 var Production bool
 
+// The scanner is a private type used for scanning templates
+var scanner *parser.Scanner
+
+// This mutex guards the pkg scanner variable during reload and access
+// it is only neccessary because of hot reload during development
+var mu sync.RWMutex
+
+// TODO remove public pkg vars completely, except perhaps Production
+/*
+// The template sets, loaded on startup for production and on every request for development
+var Templates map[string]parser.Template
+*/
+// Helper functions available in templates deprecated
+var Helpers parser.FuncMap
+
 func init() {
-	// Set up our helper functions - instead use DefaultHelpers within LoadTemplates and LoadThemes
 	Helpers = DefaultHelpers()
+}
+
+// LoadTemplates loads our templates from ./src, and assigns them to the package variable Templates
+// This function is deprecated and will be removed, use LoadTemplatesAtPaths instead
+func LoadTemplates() error {
+	return LoadTemplatesAtPaths([]string{"src"}, Helpers)
 }
 
 // DefaultHelpers returns a default set of helpers for the app, which can then be extended/replaced
@@ -96,38 +106,39 @@ func DefaultHelpers() parser.FuncMap {
 	return funcs
 }
 
-// TODO:
-// this should take a string path, and perhaps a parser.FuncMap
-// Perhaps wrap Templates in an accessor with RLock to get rid of that pkg var too
-// Change at same time as adding Themes
-
-// LoadTemplates loads our templates, and assigns them to the package variable Templates
-func LoadTemplates() error {
+// LoadTemplatesAtPaths loads our templates given the paths provided
+func LoadTemplatesAtPaths(paths []string, helpers parser.FuncMap) error {
 
 	mu.Lock()
 	defer mu.Unlock()
 
-	// Scan all templates within the directories under us
-	scanner, err := parser.NewScanner()
+	// Scan all templates within the given paths, using the helpers provided
+	var err error
+	scanner, err = parser.NewScanner(paths, helpers)
 	if err != nil {
 		return err
 	}
 
-	err = scanner.ScanPath("./src", Helpers)
+	err = scanner.ScanPaths()
 	if err != nil {
 		return err
 	}
-
-	Templates = scanner.Templates
 
 	return nil
+}
+
+// ReloadTemplates reloads the templates for our scanner
+func ReloadTemplates() error {
+	mu.Lock()
+	defer mu.Unlock()
+	return scanner.ScanPaths()
 }
 
 // PrintTemplates prints out our list of templates for debug
 func PrintTemplates() {
 	mu.RLock()
 	defer mu.RUnlock()
-	for k := range Templates {
+	for k := range scanner.Templates {
 		fmt.Printf("Template %s", k)
 	}
 	fmt.Printf("Finished scan of templates")

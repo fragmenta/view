@@ -17,8 +17,8 @@ type HTMLTemplate struct {
 	BaseTemplate
 }
 
-// StartParse performs setup before parsing templates
-func (t *HTMLTemplate) StartParse(viewsPath string, helpers FuncMap) error {
+// Setup performs setup before parsing templates
+func (t *HTMLTemplate) Setup(helpers FuncMap) error {
 	mu.Lock()
 	defer mu.Unlock()
 	htmlTemplateSet = got.New("").Funcs(got.FuncMap(helpers))
@@ -32,19 +32,23 @@ func (t *HTMLTemplate) CanParseFile(path string) bool {
 }
 
 // NewTemplate returns a new template for this type
-func (t *HTMLTemplate) NewTemplate(path string) (Template, error) {
+func (t *HTMLTemplate) NewTemplate(fullpath, path string) (Template, error) {
 	template := new(HTMLTemplate)
-	err := template.Parse(path)
-	return template, err
+	template.fullpath = fullpath
+	template.path = path
+	return template, nil
 }
 
 // Parse the template at path
-func (t *HTMLTemplate) Parse(path string) error {
+func (t *HTMLTemplate) Parse() error {
 	mu.Lock()
 	defer mu.Unlock()
-	err := t.BaseTemplate.Parse(path)
+	err := t.BaseTemplate.Parse()
+	if err != nil {
+		return err
+	}
 
-	// Add to our template set
+	// Add to our template set - NB duplicates not allowed by golang templates
 	if htmlTemplateSet.Lookup(t.Path()) == nil {
 		_, err = htmlTemplateSet.New(t.path).Parse(t.Source())
 	} else {
@@ -76,7 +80,7 @@ func (t *HTMLTemplate) Finalize(templates map[string]Template) error {
 	// Go html/template records dependencies both ways (child <-> parent)
 	// tmpl.Templates() includes tmpl and children and parents
 	// we only want includes listed as dependencies
-	// so just do a simple search of parsed source instead
+	// so just do a simple search of unparsed source instead
 
 	// Search source for {{\s template "|`xxx`|" x }} pattern
 	paths := templateInclude.FindAllStringSubmatch(t.Source(), -1)
@@ -97,5 +101,8 @@ func (t *HTMLTemplate) Render(writer io.Writer, context map[string]interface{}) 
 	mu.RLock()
 	defer mu.RUnlock()
 	tmpl := htmlTemplateSet.Lookup(t.Path())
+	if tmpl == nil {
+		return fmt.Errorf("#error loading template for %s", t.Path())
+	}
 	return tmpl.Execute(writer, context)
 }
