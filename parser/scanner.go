@@ -38,8 +38,6 @@ func NewScanner(paths []string, helpers FuncMap) (*Scanner, error) {
 // ScanPath scans a path for template files, including sub-paths
 func (s *Scanner) ScanPath(root string) error {
 
-	s.Paths = append(s.Paths, root)
-
 	root = path.Clean(root)
 
 	// Store current path, and change to root path
