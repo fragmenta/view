@@ -38,8 +38,8 @@ func TestPrices(t *testing.T) {
 		t.Fatalf(Format, price, "1000", fmt.Sprintf("%d", pence))
 	}
 	price = CentsToPrice(int64(pence))
-	if price != "10.00" {
-		t.Fatalf(Format, price, "10.00", fmt.Sprintf("%d", pence))
+	if price != "£10" {
+		t.Fatalf(Format, price, "£10", fmt.Sprintf("%d", pence))
 	}
 
 	price = "10"
@@ -48,8 +48,8 @@ func TestPrices(t *testing.T) {
 		t.Fatalf(Format, price, "1000", fmt.Sprintf("%d", pence))
 	}
 	price = CentsToPrice(int64(pence))
-	if price != "10.00" {
-		t.Fatalf(Format, price, "10.00", fmt.Sprintf("%d", pence))
+	if price != "£10" {
+		t.Fatalf(Format, price, "£10", fmt.Sprintf("%d", pence))
 	}
 
 	price = "45"
@@ -58,7 +58,7 @@ func TestPrices(t *testing.T) {
 		t.Fatalf(Format, price, "4500", fmt.Sprintf("%d", pence))
 	}
 	price = CentsToPrice(int64(pence))
-	if price != "45.00" {
+	if price != "£45" {
 		t.Fatalf(Format, price, "45.00", fmt.Sprintf("%d", pence))
 	}
 
@@ -69,7 +69,7 @@ func TestPrices(t *testing.T) {
 	}
 
 	price = CentsToPrice(int64(pence))
-	if price != "45.35" {
+	if price != "£45.35" {
 		t.Fatalf(Format, price, "45.35", fmt.Sprintf("%d", pence))
 	}
 
@@ -80,7 +80,7 @@ func TestPrices(t *testing.T) {
 	}
 
 	price = CentsToPrice(int64(pence))
-	if price != "45.30" {
+	if price != "£45.30" {
 		t.Fatalf(Format, price, "45.30", fmt.Sprintf("%d", pence))
 	}
 

@@ -7,7 +7,7 @@ import (
 
 // TestLoad loads our files from this dir (assumes GOPATH set)
 func TestLoad(t *testing.T) {
-	p := os.ExpandEnv("$GOPATH/src/github.com/fragmenta/view/translation")
+	p := os.ExpandEnv("$GOPATH/src/github.com/fragmenta/view/translation/tests")
 
 	err := Load(p)
 	if err != nil {
