@@ -62,14 +62,11 @@ func CentsToPrice(p int64) string {
 
 // CentsToPriceShort converts a price in pence to a human friendly price abreviated (no pence)
 func CentsToPriceShort(p int64) string {
-	currency := "£"
-	trailing := ""
+	// If greater than £1000 return trimmed price
 	if p > 99900 {
-		p = p / 1000
-		trailing = "k"
+		return fmt.Sprintf("£%.1fk", float64(p)/100000.0)
 	}
-	price := fmt.Sprintf("%s%d%s", currency, p/100, trailing)
-	return strings.TrimSuffix(price, ".00") // remove zero pence at end if we have it
+	return CentsToPrice(p)
 }
 
 // CentsToBase converts cents to the base currency unit, preserving cent display, with no currency
@@ -85,6 +82,11 @@ func Mod(a int, b int) int {
 // Add returns a + b
 func Add(a int, b int) int {
 	return a + b
+}
+
+// Subtract returns a - b
+func Subtract(a int, b int) int {
+	return a - b
 }
 
 // Odd returns true if a is odd
