@@ -212,7 +212,6 @@ func (r *Renderer) Render() error {
 		// Deal with no layout by rendering content directly to writer
 		_, err := io.WriteString(r.writer, r.context["content"].(string))
 		r.writer.Header().Set("Content-Type", r.format+"; charset=utf-8")
-		r.writer.WriteHeader(r.status)
 		return err
 	}
 
