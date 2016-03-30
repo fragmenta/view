@@ -136,27 +136,46 @@ func (r *Renderer) Context(c map[string]interface{}) *Renderer {
 
 // RenderToString renders our template into layout using our context and return a string
 func (r *Renderer) RenderToString() (string, error) {
+	var rendered bytes.Buffer
 
-	content := ""
-
+	// We require a template
 	if len(r.template) > 0 {
 		mu.RLock()
 		t := scanner.Templates[r.template]
 		mu.RUnlock()
 		if t == nil {
-			return content, fmt.Errorf("No such template found %s", r.template)
+			return "", fmt.Errorf("No such template found %s", r.template)
 		}
 
-		var rendered bytes.Buffer
+		// Render the template to a buffer
 		err := t.Render(&rendered, r.context)
 		if err != nil {
-			return content, err
+			return "", err
 		}
 
-		content = rendered.String()
+		// Render that buffer into the layout if we have one
+		if len(r.layout) > 0 {
+			r.context["content"] = template.HTML(rendered.String())
+
+			mu.RLock()
+			l := scanner.Templates[r.layout]
+			mu.RUnlock()
+			if l == nil {
+				return "", fmt.Errorf("No such layout found %s", r.layout)
+			}
+
+			// Render the layout to the buffer
+			rendered.Reset()
+			err := l.Render(&rendered, r.context)
+			if err != nil {
+				return "", err
+			}
+
+		}
+
 	}
 
-	return content, nil
+	return rendered.String(), nil
 }
 
 // Render our template into layout using our context and write out to writer

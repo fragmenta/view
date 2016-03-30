@@ -90,9 +90,8 @@ func TextArea(label string, name string, v interface{}, args ...string) got.HTML
 	return got.HTML(output)
 }
 
-// TODO - reconsider the select helpers, try to use an interface instead (Selectable)
-// Rewrite code to use SelectName SelectValue rather than anything else...
-// We must handle options of form 1,"123123", OR "mystring","my string" etc.
+// TODO flip the select helpers to use Selectable all the time?
+// Redefine concrete type Option as a Selectable and this should be doable?
 
 // Selectable provides an interface for options in a select
 type Selectable interface {
