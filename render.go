@@ -136,6 +136,33 @@ func (r *Renderer) Context(c map[string]interface{}) *Renderer {
 
 // RenderToString renders our template into layout using our context and return a string
 func (r *Renderer) RenderToString() (string, error) {
+
+	content := ""
+
+	if len(r.template) > 0 {
+		mu.RLock()
+		t := scanner.Templates[r.template]
+		mu.RUnlock()
+		if t == nil {
+			return content, fmt.Errorf("No such template found %s", r.template)
+		}
+
+		var rendered bytes.Buffer
+		err := t.Render(&rendered, r.context)
+		if err != nil {
+			return content, err
+		}
+
+		content = rendered.String()
+	}
+
+	return content, nil
+}
+
+// FIXME - test for side-effects then replace RenderToString with the layout version as a bug fix
+
+// RenderToStringWithLayout renders our template into layout using our context and return a string
+func (r *Renderer) RenderToStringWithLayout() (string, error) {
 	var rendered bytes.Buffer
 
 	// We require a template
