@@ -62,8 +62,11 @@ func CentsToPrice(p int64) string {
 
 // CentsToPriceShort converts a price in pence to a human friendly price abreviated (no pence)
 func CentsToPriceShort(p int64) string {
-	// If greater than £1000 return trimmed price
-	if p > 99900 {
+	if p >= 100000000000 { // If greater than £1b use b suffix
+		return fmt.Sprintf("£%.2fb", float64(p)/100000000000.0)
+	} else if p >= 100000000 { // If greater than £1m use m suffix
+		return fmt.Sprintf("£%.2fm", float64(p)/100000000.0)
+	} else if p >= 100000 { // If greater than £1k use k suffix
 		return fmt.Sprintf("£%.1fk", float64(p)/100000.0)
 	}
 	return CentsToPrice(p)
