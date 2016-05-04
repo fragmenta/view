@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"os"
 	"path"
 	"regexp"
 	"strings"
@@ -104,9 +105,17 @@ func (r *Renderer) Path(p string) *Renderer {
 	return r
 }
 
-// Status returns the Renderer status
+// Status sets the Renderer status
 func (r *Renderer) Status(status int) *Renderer {
 	r.status = status
+	return r
+}
+
+// Header sets a header on the Renderer's Writer (if set)
+func (r *Renderer) Header(k, v string) *Renderer {
+	if r.writer != nil {
+		r.writer.Header().Set(k, v)
+	}
 	return r
 }
 
@@ -261,6 +270,23 @@ func (r *Renderer) Render() error {
 		return err
 	}
 
+	return nil
+}
+
+// SendFile writes the file at the given path out to our writer
+// it assumes the appropriate headers have been set first (Content-Type, Content-Disposition) e.g.:
+//	view.Header("Content-type", "application/pdf")
+//	view.Header("Content-Disposition", "attachment; filename='myfile.pdf'")
+//  view.SendFile(mypath)
+func (r *Renderer) SendFile(p string) error {
+	f, err := os.Open(p)
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(r.writer, f)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
