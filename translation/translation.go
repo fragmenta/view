@@ -1,4 +1,4 @@
-// Package translation provides a simple in-memory translation service
+// Package translation provides a simple in-memory translation service - it may soon be renamed translate
 package translation
 
 import (

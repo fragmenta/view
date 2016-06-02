@@ -9,6 +9,8 @@ import (
 	"github.com/fragmenta/view/parser"
 )
 
+// TODO remove public pkg vars completely, replace with private vars
+
 // Production is true if this server is running in production mode
 var Production bool
 
@@ -19,12 +21,7 @@ var scanner *parser.Scanner
 // it is only neccessary because of hot reload during development
 var mu sync.RWMutex
 
-// TODO remove public pkg vars completely, except perhaps Production
-/*
-// The template sets, loaded on startup for production and on every request for development
-var Templates map[string]parser.Template
-*/
-// Helper functions available in templates deprecated
+// Helpers is a list of functions available in templates
 var Helpers parser.FuncMap
 
 func init() {

@@ -21,16 +21,16 @@ type Renderer struct {
 	// The writer to write the context to
 	writer http.ResponseWriter
 
-	// The layout template to render in
+	// The layout template path
 	layout string
 
-	// The template to render
+	// The template path
 	template string
 
-	// The format to render with (html,json etc)
+	// The mime format to render with, defaults to text/html
 	format string
 
-	// The status to render with
+	// The http status code
 	status int
 
 	// The request path
