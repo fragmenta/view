@@ -219,7 +219,7 @@ func (r *Renderer) Render() error {
 
 	// Reload if not in production
 	if !Production {
-		fmt.Printf("#warn Reloading templates in development mode\n")
+		//	fmt.Printf("#warn Reloading templates in development mode\n")
 		err := ReloadTemplates()
 		if err != nil {
 			return err
