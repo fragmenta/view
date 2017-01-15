@@ -37,36 +37,24 @@ type Renderer struct {
 	path string
 }
 
-// RenderContext is the type passed in to New, which helps construct the rendering view
-// Alternatively, you can use NewWithPath, which doesn't require a RenderContext
-type RenderContext interface {
-	Path() string
-	RenderContext() map[string]interface{}
-	Writer() http.ResponseWriter
+type ctxKey struct {
+	name string
 }
 
-// New creates a new Renderer
-func New(c RenderContext) *Renderer {
-	r := &Renderer{
-		path:     c.Path(),
-		layout:   "app/views/layout.html.got",
-		template: "",
-		format:   "text/html",
-		status:   http.StatusOK,
-		context:  c.RenderContext(),
-		writer:   c.Writer(),
-	}
-
-	// This sets layout and template based on the view.path
-	r.setDefaultTemplates()
-
-	return r
+func (k *ctxKey) String() string {
+	return "view ctx: " + k.name
 }
 
-// NewWithPath creates a new Renderer with a path and an http.ResponseWriter
-func NewWithPath(p string, w http.ResponseWriter) *Renderer {
-	r := &Renderer{
-		path:     p,
+var authenticityKey = "authenticity_token"
+
+// AuthenticityContext is used as a key to save request
+// authenticity tokens for consumption by the view
+var AuthenticityContext = &ctxKey{authenticityKey}
+
+// NewRenderer returns a new renderer for this request.
+func NewRenderer(w http.ResponseWriter, r *http.Request) *Renderer {
+	renderer := &Renderer{
+		path:     canonicalPath(r),
 		layout:   "app/views/layout.html.got",
 		template: "",
 		format:   "text/html",
@@ -75,10 +63,16 @@ func NewWithPath(p string, w http.ResponseWriter) *Renderer {
 		writer:   w,
 	}
 
-	// This sets layout and template based on the view.path
-	r.setDefaultTemplates()
+	// Extract the authenticity token (if any) from context
+	val := r.Context().Value(AuthenticityContext)
+	if val != nil {
+		renderer.context[authenticityKey] = val.(string)
+	}
 
-	return r
+	// This sets layout and template based on the view.path
+	renderer.setDefaultTemplates()
+
+	return renderer
 }
 
 // Layout sets the layout used
@@ -117,6 +111,13 @@ func (r *Renderer) Header(k, v string) *Renderer {
 		r.writer.Header().Set(k, v)
 	}
 	return r
+}
+
+// CacheKey sets the Cache-Control and Etag headers on the response
+// using the CacheKey() from the Cacher passed in
+func (r *Renderer) CacheKey(key string) {
+	r.writer.Header().Set("Cache-Control", "no-cache, public")
+	r.writer.Header().Set("Etag", key)
 }
 
 // Text sets the view content as text
@@ -212,6 +213,13 @@ func (r *Renderer) RenderToStringWithLayout() (string, error) {
 	}
 
 	return rendered.String(), nil
+}
+
+// Response renders our template into layout using our context and write out to writer
+// Response is an alternative name for Render so that we can
+// call render.Response(), it may replace it eventually.
+func (r *Renderer) Response() error {
+	return r.Render()
 }
 
 // Render our template into layout using our context and write out to writer
@@ -347,4 +355,17 @@ func (r *Renderer) setDefaultTemplates() {
 		r.layout = path
 	}
 	mu.RUnlock()
+}
+
+// canonicalPath extracts the request path, runs path.Clean
+// and ensures it is prefixed with /.
+func canonicalPath(r *http.Request) string {
+	// Clean the path
+	canonicalPath := path.Clean(r.URL.Path)
+	if len(canonicalPath) == 0 {
+		canonicalPath = "/"
+	} else if canonicalPath[0] != '/' {
+		canonicalPath = "/" + canonicalPath
+	}
+	return canonicalPath
 }

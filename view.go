@@ -9,8 +9,6 @@ import (
 	"github.com/fragmenta/view/parser"
 )
 
-// TODO remove public pkg vars completely, replace with private vars
-
 // Production is true if this server is running in production mode
 var Production bool
 
@@ -34,8 +32,9 @@ func LoadTemplates() error {
 	return LoadTemplatesAtPaths([]string{"src"}, Helpers)
 }
 
-// DefaultHelpers returns a default set of helpers for the app, which can then be extended/replaced
-// NB if you change helper functions the templates must be reloaded at least once afterwards
+// DefaultHelpers returns a default set of helpers for the app,
+// which can then be extended/replaced. Helper functions may not be changed
+// after LoadTemplates is called, as reloading is required if they change.
 func DefaultHelpers() parser.FuncMap {
 	funcs := make(parser.FuncMap)
 
@@ -137,7 +136,7 @@ func PrintTemplates() {
 	mu.RLock()
 	defer mu.RUnlock()
 	for k := range scanner.Templates {
-		fmt.Printf("Template %s", k)
+		fmt.Printf("%s\n", k)
 	}
-	fmt.Printf("Finished scan of templates")
+	fmt.Printf("Finished scan of templates\n")
 }
