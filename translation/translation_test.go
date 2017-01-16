@@ -1,14 +1,12 @@
 package translation
 
 import (
-	"os"
 	"testing"
 )
 
 // TestLoad loads our files from this dir (assumes GOPATH set)
 func TestLoad(t *testing.T) {
-	p := os.ExpandEnv("$GOPATH/src/github.com/fragmenta/view/translation/tests")
-
+	p := "test_data"
 	err := Load(p)
 	if err != nil {
 		t.Fatalf("Load translations failed at path:%s error:%s", p, err)
