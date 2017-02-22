@@ -54,7 +54,7 @@ var AuthenticityContext = &ctxKey{authenticityKey}
 // NewRenderer returns a new renderer for this request.
 func NewRenderer(w http.ResponseWriter, r *http.Request) *Renderer {
 	renderer := &Renderer{
-		path:     canonicalPath(r),
+		path:     "/",
 		layout:   "app/views/layout.html.got",
 		template: "",
 		format:   "text/html",
@@ -63,10 +63,15 @@ func NewRenderer(w http.ResponseWriter, r *http.Request) *Renderer {
 		writer:   w,
 	}
 
-	// Extract the authenticity token (if any) from context
-	val := r.Context().Value(AuthenticityContext)
-	if val != nil {
-		renderer.context[authenticityKey] = val.(string)
+	if r != nil {
+		// Read the path from request
+		renderer.path = canonicalPath(r)
+
+		// Extract the authenticity token (if any) from context
+		val := r.Context().Value(AuthenticityContext)
+		if val != nil {
+			renderer.context[authenticityKey] = val.(string)
+		}
 	}
 
 	// This sets layout and template based on the view.path
