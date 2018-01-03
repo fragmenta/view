@@ -16,7 +16,7 @@ type RenderContext interface {
 func New(c RenderContext) *Renderer {
 	r := &Renderer{
 		path:     c.Path(),
-		layout:   "app/views/layout.html.got",
+		layout:   "layouts/views/layouts/layout.html.got",
 		template: "",
 		format:   "text/html",
 		status:   http.StatusOK,
@@ -34,7 +34,7 @@ func New(c RenderContext) *Renderer {
 func NewWithPath(p string, w http.ResponseWriter) *Renderer {
 	r := &Renderer{
 		path:     p,
-		layout:   "app/views/layout.html.got",
+		layout:   "layouts/views/layouts/layout.html.got",
 		template: "",
 		format:   "text/html",
 		status:   http.StatusOK,

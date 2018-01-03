@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/fragmenta/view/helpers"
-	"github.com/fragmenta/view/parser"
+	"github.com/freska-cms/view/helpers"
+	"github.com/freska-cms/view/parser"
 )
 
 // Production is true if this server is running in production mode
