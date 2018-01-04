@@ -10,6 +10,8 @@ import (
 	"path"
 	"regexp"
 	"strings"
+	//"golang.org/x/crypto/openpgp/errors"
+	"errors"
 )
 
 // Renderer is a view which is set up on each request and renders the response to its writer
@@ -55,7 +57,7 @@ var AuthenticityContext = &ctxKey{authenticityKey}
 func NewRenderer(w http.ResponseWriter, r *http.Request) *Renderer {
 	renderer := &Renderer{
 		path:     "/",
-		layout:   "app/views/layout.html.got",
+		layout:   "layouts/views/layouts/layout.html.got",
 		template: "",
 		format:   "text/html",
 		status:   http.StatusOK,
@@ -257,8 +259,6 @@ func (r *Renderer) Render() error {
 
 		if r.layout != "" {
 			r.context["content"] = template.HTML(rendered.String())
-		} else {
-			r.context["content"] = rendered.String()
 		}
 	}
 
@@ -284,6 +284,27 @@ func (r *Renderer) Render() error {
 	}
 
 	return nil
+}
+
+func RenderTemplate(region string, mapObj map[string]interface{}) (template.HTML, error) {
+	var err error
+	mu.RLock()
+	t := scanner.Templates[region]
+	mu.RUnlock()
+
+	if t == nil {
+		err = errors.New("#error Could not find region %s" + region)
+		return "", err
+	}
+	var rendered bytes.Buffer
+
+	err = t.Render(&rendered, mapObj)
+	if err != nil {
+		return "", err
+	}
+	renderedTemplate := template.HTML(rendered.String())
+	return renderedTemplate, err
+
 }
 
 // SendFile writes the file at the given path out to our writer
