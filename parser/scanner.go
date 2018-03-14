@@ -2,6 +2,7 @@
 package parser
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -21,6 +22,9 @@ type Scanner struct {
 
 	// Helpers is a list of helper functions
 	Helpers FuncMap
+
+	// rootPath is used to store the root path during scans
+	rootPath string
 }
 
 // NewScanner creates a new template scanner
@@ -38,7 +42,8 @@ func NewScanner(paths []string, helpers FuncMap) (*Scanner, error) {
 // ScanPath scans a path for template files, including sub-paths
 func (s *Scanner) ScanPath(root string) error {
 
-	root = path.Clean(root)
+	// Store the rootPath - used in walkFunc
+	s.rootPath = path.Clean(root)
 
 	// Store current path, and change to root path
 	// so that template includes use relative paths from root
@@ -47,39 +52,14 @@ func (s *Scanner) ScanPath(root string) error {
 	if err != nil {
 		return err
 	}
-	err = os.Chdir(root)
+
+	// Change dir to the rootPath so that paths are relative
+	err = os.Chdir(s.rootPath)
 	if err != nil {
 		return err
 	}
 
-	err = filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
-
-		if err != nil {
-			return err
-		}
-
-		// Deal with files, directories we return nil error to recurse on them
-		if !info.IsDir() {
-			// Ask parsers in turn to handle the file - first one to claim it wins
-			for _, p := range s.Parsers {
-				if p.CanParseFile(path) {
-
-					fullpath := filepath.Join(root, path)
-					t, err := p.NewTemplate(fullpath, path)
-					if err != nil {
-						return err
-					}
-
-					s.Templates[path] = t
-					return nil
-				}
-			}
-
-		}
-
-		return nil
-	})
-
+	err = filepath.Walk(".", s.walkFunc)
 	if err != nil {
 		return err
 	}
@@ -91,6 +71,85 @@ func (s *Scanner) ScanPath(root string) error {
 	}
 
 	return nil
+}
+
+// walkFunc handles files from filepath.Walk in ScanPath
+// It follows symlinks where encountered by recursing
+func (s *Scanner) walkFunc(path string, info os.FileInfo, err error) error {
+
+	if strings.Contains(path, "guides") {
+		fmt.Printf("WalkFunc:%s\n", path)
+	}
+
+	// If an error occurred, report it
+	if err != nil {
+		return err
+	}
+
+	// Check if this is a symlink, if so recurse
+	// This assumes that the structure at linkedPath exactly mirrors that at path
+	if isSymlink(info) {
+
+		// Find the linked path
+		linkedPath, err := filepath.EvalSymlinks(path)
+		if err != nil {
+			return fmt.Errorf("error reading symbolic link: %s", err)
+		}
+
+		// Calculate a new temp root path, based on linked path
+		// trimmed of the original path
+		// This assumes that the structure at linkedPath exactly mirrors that at path
+		newRoot := strings.TrimSuffix(linkedPath, path)
+
+		// Store current dir
+		pwd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+
+		// Change dir to the linked path container
+		err = os.Chdir(newRoot)
+		if err != nil {
+			return err
+		}
+
+		// filepath.Walk at the location, based on the newRoot
+		err = filepath.Walk(path, s.walkFunc)
+
+		// Change dir back to pwd
+		err = os.Chdir(pwd)
+		if err != nil {
+			return err
+		}
+
+		return err
+	}
+
+	// Deal with files, directories we return nil error to recurse on them
+	if !info.IsDir() {
+		// Ask parsers in turn to handle the file - first one to claim it wins
+		for _, p := range s.Parsers {
+			if p.CanParseFile(path) {
+
+				fullpath := filepath.Join(s.rootPath, path)
+				t, err := p.NewTemplate(fullpath, path)
+				if err != nil {
+					return err
+				}
+
+				s.Templates[path] = t
+				return nil
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// isSymlink returns true if this is a symlink
+func isSymlink(info os.FileInfo) bool {
+	return info.Mode()&os.ModeSymlink != 0
 }
 
 // ScanPaths resets template list and rescans all template paths
