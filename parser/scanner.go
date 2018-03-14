@@ -77,10 +77,6 @@ func (s *Scanner) ScanPath(root string) error {
 // It follows symlinks where encountered by recursing
 func (s *Scanner) walkFunc(path string, info os.FileInfo, err error) error {
 
-	if strings.Contains(path, "guides") {
-		fmt.Printf("WalkFunc:%s\n", path)
-	}
-
 	// If an error occurred, report it
 	if err != nil {
 		return err
