@@ -45,11 +45,13 @@ func (k *ctxKey) String() string {
 	return "view ctx: " + k.name
 }
 
+// AuthenticityContext is used as a key to save request authenticity tokens
+var AuthenticityContext = &ctxKey{authenticityKey}
 var authenticityKey = "authenticity_token"
 
-// AuthenticityContext is used as a key to save request
-// authenticity tokens for consumption by the view
-var AuthenticityContext = &ctxKey{authenticityKey}
+// LanguageContext is used as a key to save request lang
+var LanguageContext = &ctxKey{languageKey}
+var languageKey = "lang"
 
 // NewRenderer returns a new renderer for this request.
 func NewRenderer(w http.ResponseWriter, r *http.Request) *Renderer {
@@ -68,9 +70,15 @@ func NewRenderer(w http.ResponseWriter, r *http.Request) *Renderer {
 		renderer.path = canonicalPath(r)
 
 		// Extract the authenticity token (if any) from context
-		val := r.Context().Value(AuthenticityContext)
-		if val != nil {
-			renderer.context[authenticityKey] = val.(string)
+		token := r.Context().Value(AuthenticityContext)
+		if token != nil {
+			renderer.context[authenticityKey] = token.(string)
+		}
+
+		// Extract the language (if any) from context
+		lang := r.Context().Value(LanguageContext)
+		if lang != nil {
+			renderer.context[languageKey] = lang.(string)
 		}
 	}
 
