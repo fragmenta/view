@@ -12,6 +12,9 @@ import (
 	"sync"
 )
 
+// DefaultLanguage defines a default language to fall back to
+var DefaultLanguage = "en"
+
 // data holds the translated data in memory (at present not split by language)
 var data map[string]string
 
@@ -47,10 +50,25 @@ func Load(root string) error {
 }
 
 // Get returns the translation for a given language and key
+// if no result, it falls back to DefaultLanguage + key
 func Get(lang, key string) string {
 	mu.RLock()
 	defer mu.RUnlock()
-	return data[lang+key]
+
+	// First try the language specified
+	t := data[lang+key]
+	if t != "" {
+		return t
+	}
+
+	// Fall back to default language if no result (in our case english)
+	t = data[DefaultLanguage+key]
+	if t != "" {
+		return t
+	}
+
+	// If still no result, return key
+	return key
 }
 
 // canParseFile returns true if we can parse this file
