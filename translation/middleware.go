@@ -27,15 +27,18 @@ func Middleware(h http.HandlerFunc) http.HandlerFunc {
 				lang = cookieLang
 			}
 
-			// Debug only
+			// Debug only - print the language chosen
 			//log.Printf("translation: setting lang %s", lang)
 
-			// Save the language to the request context for use in views
-			if lang != "" {
-				ctx := r.Context()
-				ctx = context.WithValue(ctx, view.LanguageContext, lang)
-				r = r.WithContext(ctx)
+			// Choose a default language if none set in either location
+			if lang == "" {
+				lang = DefaultLanguage
 			}
+
+			// Save the language to the request context for use in views
+			ctx := r.Context()
+			ctx = context.WithValue(ctx, view.LanguageContext, lang)
+			r = r.WithContext(ctx)
 
 		}
 
