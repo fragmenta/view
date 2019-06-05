@@ -112,6 +112,42 @@ func Time(time time.Time, formats ...string) got.HTML {
 	return got.HTML(Escape(value))
 }
 
+// Ago returns a time string reporting distance from the current date
+// of form 5 hours ago
+func Ago(t time.Time, formats ...string) string {
+	duration := time.Since(t)
+	absDuration := duration
+	if duration < 0 {
+		absDuration = -duration
+	}
+	hours := absDuration / time.Hour
+
+	// Use ago only for past dates
+	ago := " ago"
+	if duration < 0 {
+		ago = ""
+	}
+
+	switch {
+	case absDuration < time.Minute:
+		return fmt.Sprintf("%d seconds%s", duration/time.Second, ago)
+	case absDuration < time.Hour:
+		return fmt.Sprintf("%d minutes%s", duration/time.Minute, ago)
+	case absDuration < time.Hour*24:
+		unit := "hour"
+		if hours > 1 {
+			unit = "hours"
+		}
+		return fmt.Sprintf("%d %s%s", hours, unit, ago)
+	default:
+		unit := "day"
+		if hours > 48 {
+			unit = "days"
+		}
+		return fmt.Sprintf("%d %s%s", hours/24, unit, ago)
+	}
+}
+
 // Date returns a formatted date string given a time and optional format
 // Date format layouts are for the date 2006-01-02
 func Date(t time.Time, formats ...string) got.HTML {

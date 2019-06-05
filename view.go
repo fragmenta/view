@@ -75,6 +75,7 @@ func DefaultHelpers() parser.FuncMap {
 	funcs["utcnow"] = helpers.UTCNow
 	funcs["date"] = helpers.Date
 	funcs["time"] = helpers.Time
+	funcs["ago"] = helpers.Ago
 	funcs["numberoptions"] = helpers.NumberOptions
 
 	// String helpers
