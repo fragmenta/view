@@ -55,6 +55,13 @@ func DefaultHelpers() parser.FuncMap {
 	// XML helpers
 	funcs["xmlpreamble"] = helpers.XMLPreamble
 
+	// JSON helpers
+	funcs["json"] = helpers.JSON
+	funcs["jsontime"] = helpers.JSONTime
+
+	// CSV helper
+	funcs["csv"] = helpers.CSV
+
 	// Form helpers
 	funcs["field"] = helpers.Field
 	funcs["datefield"] = helpers.DateField
@@ -69,9 +76,6 @@ func DefaultHelpers() parser.FuncMap {
 	funcs["date"] = helpers.Date
 	funcs["time"] = helpers.Time
 	funcs["numberoptions"] = helpers.NumberOptions
-
-	// CSV helper
-	funcs["csv"] = helpers.CSV
 
 	// String helpers
 	funcs["blank"] = helpers.Blank

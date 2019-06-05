@@ -135,6 +135,12 @@ func UTCTime(t time.Time) got.HTML {
 	return Time(t.UTC(), "2006-01-02T15:04:00:00.000Z")
 }
 
+// JSONTime returns a formatted date string with format
+// suitable for using in a json file
+func JSONTime(t time.Time) got.HTML {
+	return Time(t.UTC(), "2006-01-02T15:04:05Z07:00")
+}
+
 // UTCNow returns a formatted date string in 2006-01-02
 func UTCNow() got.HTML {
 	return Date(time.Now(), "2006-01-02")
@@ -148,4 +154,16 @@ func Truncate(s string, l int64) string {
 // CSV escape (replace , with ,,)
 func CSV(s got.HTML) string {
 	return strings.Replace(string(s), ",", ",,", -1)
+}
+
+// JSON escapes a string for use in a json template (html template)
+func JSON(t string) got.HTML {
+	// Escape mandatory characters
+	t = strings.Replace(t, "\r", " ", -1)
+	t = strings.Replace(t, "\n", " ", -1)
+	t = strings.Replace(t, "\t", " ", -1)
+	t = strings.Replace(t, "\\", "\\\\", -1)
+	t = strings.Replace(t, "\"", "\\\"", -1)
+	// Because we use html/template escape as temlate.HTML
+	return got.HTML(t)
 }
