@@ -21,12 +21,31 @@ var data map[string]string
 // mu guards the translations during load and access
 var mu sync.RWMutex
 
-// Load scans the path for translation lang.json files
-func Load(root string) error {
-	// Lock data for load operation
+var setupComplete bool
+
+// Setup sets up the initial map
+func Setup() error {
 	mu.Lock()
 	defer mu.Unlock()
 	data = make(map[string]string)
+	setupComplete = true
+	return nil
+}
+
+// Load scans the path for translation lang.json files
+// if called twice the second translations will overwrite any common keys
+func Load(root string) error {
+	// Ensure setup was called
+	if !setupComplete {
+		err := Setup()
+		if err != nil {
+			return err
+		}
+	}
+
+	// Lock data for load operation
+	mu.Lock()
+	defer mu.Unlock()
 
 	// Scan the files in the given dir, looking for our suffix
 	err := filepath.Walk(root, func(p string, info os.FileInfo, err error) error {
