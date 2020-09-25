@@ -179,7 +179,12 @@ func JSONTime(t time.Time) got.HTML {
 
 // UTCNow returns a formatted date string in 2006-01-02
 func UTCNow() got.HTML {
-	return Date(time.Now(), "2006-01-02")
+	return Date(time.Now().UTC(), "2006-01-02")
+}
+
+// YearNow returns a formatted date string for the current year
+func YearNow() got.HTML {
+	return Date(time.Now().UTC(), "2006")
 }
 
 // Truncate text to a given length
