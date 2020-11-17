@@ -227,8 +227,39 @@ func SelectArray(label string, name string, value interface{}, options interface
 
 // Option type contains number and string
 type Option struct {
-	Id   int64
-	Name string
+	Id   int64  // The value - FIXME migrate to ID and use as interface
+	Name string // The name
+}
+
+// SelectName returns the public name for this select option
+func (o Option) SelectName() string {
+	return o.Name
+}
+
+// SelectValue returns the value for this select option
+func (o Option) SelectValue() string {
+	return fmt.Sprintf("%d", o.Id)
+}
+
+// SelectID returns the value for this select option as an int64
+func (o Option) SelectID() int64 {
+	return o.Id
+}
+
+// ID returns the value for this select option as an int64
+// this is supplied in case of use in templates
+func (o Option) ID() int64 {
+	return o.Id
+}
+
+// SetID is deprecated
+func (o Option) SetID(id int64) {
+	o.Id = id
+}
+
+// NewOption returns a new option, given an id and name
+func NewOption(id int64, name string) Option {
+	return Option{Id: id, Name: name}
 }
 
 // Select creates a select field given an array of keys and values in order
