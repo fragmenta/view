@@ -88,6 +88,7 @@ func DefaultHelpers() parser.FuncMap {
 	funcs["odd"] = helpers.Odd
 	funcs["add"] = helpers.Add
 	funcs["subtract"] = helpers.Subtract
+	funcs["int64"] = helpers.Int64
 
 	// Array functions
 	funcs["array"] = helpers.Array
@@ -105,6 +106,8 @@ func DefaultHelpers() parser.FuncMap {
 	funcs["centstoprice"] = helpers.CentsToPrice
 	funcs["centstopriceshort"] = helpers.CentsToPriceShort
 	funcs["pricetocents"] = helpers.PriceToCents
+	funcs["numbertohuman"] = helpers.NumberToHuman
+	funcs["numbertocommas"] = helpers.NumberToCommas
 
 	return funcs
 }

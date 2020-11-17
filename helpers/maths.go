@@ -72,6 +72,45 @@ func CentsToPriceShort(p int64) string {
 	return CentsToPrice(p)
 }
 
+// NumberToHuman formats large numbers for human consumption
+// some preceision is lost, e.g. 1.3m rather than 130000001
+func NumberToHuman(n int64) string {
+	if n >= 100000000000 { // If greater than 1 billion use b suffix
+		return fmt.Sprintf("%.2fb", float64(n)/100000000000.0)
+	} else if n >= 100000000 { // If greater than 1m use m suffix
+		return fmt.Sprintf("%.2fm", float64(n)/100000000.0)
+	} else if n >= 1000 { // If greater than 1000 use k suffix
+		return fmt.Sprintf("%.2fk", float64(n)/1000.0)
+	}
+	// Just format as a string
+	return fmt.Sprintf("%d", n)
+}
+
+// NumberToCommas formats large numbers with commas
+// the entire number is still represented
+func NumberToCommas(n int64) string {
+	// Print the number
+	s := fmt.Sprintf("%d", n)
+
+	if len(s) < 4 {
+		return s
+	}
+
+	// Split the number with commas every 3 numerals
+	var formatted string
+	// Count backwards from the end in 3s
+	for i := len(s) - 1; i >= 0; i-- {
+		c := s[i]
+		if i < len(s)-1 && (len(s)-i-1)%3 == 0 {
+			formatted = string(c) + "," + formatted
+		} else {
+			formatted = string(c) + formatted
+		}
+	}
+
+	return formatted
+}
+
 // CentsToBase converts cents to the base currency unit, preserving cent display, with no currency
 func CentsToBase(p int64) string {
 	return fmt.Sprintf("%.2f", float64(p)/100.0)
@@ -95,4 +134,9 @@ func Subtract(a int, b int) int {
 // Odd returns true if a is odd
 func Odd(a int) bool {
 	return a%2 == 0
+}
+
+// Int64 returns an int64 from an int
+func Int64(i int) int64 {
+	return int64(i)
 }

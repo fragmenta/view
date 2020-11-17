@@ -85,3 +85,23 @@ func TestPrices(t *testing.T) {
 	}
 
 }
+
+var commaNumbers = map[int64]string{
+	100:       "100",
+	1000:      "1,000",
+	102001:    "102,001",
+	31300002:  "31,300,002",
+	12001:     "12,001",
+	300002:    "300,002",
+	74002:     "74,002",
+	450000003: "450,000,003",
+}
+
+func TestNumberToCommas(t *testing.T) {
+	for k, v := range commaNumbers {
+		r := NumberToCommas(k)
+		if r != v {
+			t.Errorf("numbertocommas: wanted:%s got:%s", v, r)
+		}
+	}
+}
