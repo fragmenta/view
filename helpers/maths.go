@@ -61,6 +61,7 @@ func CentsToPrice(p int64) string {
 }
 
 // CentsToPriceShort converts a price in pence to a human friendly price abreviated (no pence)
+// note the extra 00s for cents so £1k is 100000
 func CentsToPriceShort(p int64) string {
 	if p >= 100000000000 { // If greater than £1b use b suffix
 		return fmt.Sprintf("£%.2fb", float64(p)/100000000000.0)
@@ -73,12 +74,13 @@ func CentsToPriceShort(p int64) string {
 }
 
 // NumberToHuman formats large numbers for human consumption
-// some preceision is lost, e.g. 1.3m rather than 130000001
+// some precision is lost, e.g. 1.3m rather than 130000001
+// note this differs from the method above due to cents
 func NumberToHuman(n int64) string {
-	if n >= 100000000000 { // If greater than 1 billion use b suffix
-		return fmt.Sprintf("%.2fb", float64(n)/100000000000.0)
-	} else if n >= 100000000 { // If greater than 1m use m suffix
-		return fmt.Sprintf("%.2fm", float64(n)/100000000.0)
+	if n >= 100000000 { // If greater than 1 billion use b suffix
+		return fmt.Sprintf("%.2fb", float64(n)/100000000.0)
+	} else if n >= 1000000 { // If greater than 1m use m suffix
+		return fmt.Sprintf("%.2fm", float64(n)/1000000.0)
 	} else if n >= 1000 { // If greater than 1000 use k suffix
 		return fmt.Sprintf("%.2fk", float64(n)/1000.0)
 	}
